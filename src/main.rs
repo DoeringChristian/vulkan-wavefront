@@ -6,6 +6,8 @@ use screen_13::prelude::*;
 use self::array::Array;
 mod array;
 mod dense_arena;
+mod mesh;
+mod scene;
 mod types;
 
 fn main() {
