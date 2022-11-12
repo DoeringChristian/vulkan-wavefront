@@ -12,6 +12,7 @@ struct Metadata {
 pub struct Array<T: AsStd140> {
     _ty: PhantomData<T>,
     pub buf: Arc<Buffer>,
+    device: Arc<Device>,
     count: usize,
 }
 
@@ -34,7 +35,16 @@ impl<T: AsStd140> Array<T> {
         Self {
             buf,
             count: data.len(),
+            device: device.clone(),
             _ty: PhantomData,
         }
+    }
+    #[inline]
+    pub fn count(&self) -> usize {
+        self.count
+    }
+    #[inline]
+    pub fn size(&self) -> usize {
+        Metadata::std140_size_static() + T::std140_size_static() * self.count
     }
 }
