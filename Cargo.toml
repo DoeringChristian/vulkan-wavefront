@@ -7,3 +7,6 @@ edition = "2021"
 
 [dependencies]
 screen-13 = "*"
+inline-spirv = "0.1.5"
+glam = "*"
+crevice = "*"
