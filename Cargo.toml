@@ -10,3 +10,4 @@ screen-13 = "*"
 inline-spirv = "0.1.5"
 glam = "0.22"
 crevice = {version = "*", features = ["glam"]}
+embree = "*"

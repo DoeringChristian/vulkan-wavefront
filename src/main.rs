@@ -8,10 +8,11 @@ mod array;
 mod dense_arena;
 mod mesh;
 mod scene;
+mod traits;
 mod types;
 
 fn main() {
-    let config = DriverConfig::new().build();
-    let device = Arc::new(Device::new(config).unwrap());
-    let arr = Array::create(&device, &[1, 2, 3], BufferUsageFlags::STORAGE_BUFFER);
+    //let config = DriverConfig::new().build();
+    //let device = Arc::new(Device::new(config).unwrap());
+    //let arr = Array::create(&device, &[1, 2, 3], BufferUsageFlags::STORAGE_BUFFER);
 }
