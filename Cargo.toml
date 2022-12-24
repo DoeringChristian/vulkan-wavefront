@@ -9,5 +9,5 @@ edition = "2021"
 screen-13 = "*"
 inline-spirv = "0.1.5"
 glam = "0.22"
-crevice = {version = "*", features = ["glam"]}
-embree = "*"
+crevice = {version = "0.12.0", features = ["glam"]}
+bytemuck = {version = "1.12.3", features = ["derive"]}

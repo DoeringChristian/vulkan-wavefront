@@ -1,5 +1,14 @@
-use crevice::std140::AsStd140;
+use bytemuck::{Pod, Zeroable};
+use crevice::std140::{AsStd140, Std140};
 use glam;
+
+#[repr(C)]
+#[derive(Debug, Clone, Copy, Pod, Zeroable)]
+pub struct uint64_t(u64);
+
+unsafe impl Std140 for uint64_t {
+    const ALIGNMENT: usize = 64;
+}
 
 #[derive(AsStd140)]
 pub struct Interaction3 {
@@ -25,3 +34,12 @@ pub struct Ray3 {
 
 #[derive(AsStd140)]
 pub struct Material {}
+
+#[derive(AsStd140)]
+pub struct Instance {
+    pub mat: glam::Mat4,
+
+    pub mat_id: u32,
+    pub indices: uint64_t,
+    pub vertices: uint64_t,
+}

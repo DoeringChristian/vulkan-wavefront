@@ -4,11 +4,12 @@ use screen_13::prelude::vk::BufferUsageFlags;
 use screen_13::prelude::*;
 
 use self::array::Array;
+//mod accel;
 mod array;
 mod dense_arena;
 mod mesh;
+mod sbt;
 mod scene;
-mod traits;
 mod types;
 
 fn main() {
