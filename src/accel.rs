@@ -33,10 +33,8 @@ impl Blas {
         rgraph: &mut RenderGraph,
     ) -> AnyAccelerationStructureNode {
         //let geometry = scene.geometries.get(self.geometry).unwrap();
-        let indices = self
-            .indices
-        let positions = self
-            .positions
+        let indices = self.indices;
+        let positions = self.positions;
         let index_node = rgraph.bind_node(&indices.buf);
         let vertex_node = rgraph.bind_node(&positions.buf);
         let accel_node = rgraph.bind_node(&self.accel);
