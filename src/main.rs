@@ -21,17 +21,14 @@ fn main() {
     //let arr = Array::create(&device, &[1, 2, 3], BufferUsageFlags::STORAGE_BUFFER);
     let cfg = DriverConfig::new().build();
     let device = Arc::new(Device::new(cfg).unwrap());
-    let mut cache = HashPool::new(&device);
+    let mut cache = LazyPool::new(&device);
 
-    let cppl = Arc::new(
-        ComputePipeline::create(
-            &device,
-            ComputePipelineInfo::new(SHADER)
-                .entry_name("main_cp".into())
-                .build(),
-        )
-        .unwrap(),
-    );
+    let cpplinfo = ComputePipelineInfo::new(SHADER)
+        .entry_name("main_cpp".into())
+        .build();
+
+    let cppl = Arc::new(ComputePipeline::create(&device, cpplinfo).unwrap());
+    println!("test");
 
     let mut rgraph = RenderGraph::new();
 
@@ -40,6 +37,8 @@ fn main() {
 
     let i_node = rgraph.bind_node(&i.buf);
     let o_node = rgraph.bind_node(&o.buf);
+
+    println!("test");
 
     rgraph
         .begin_pass("Add 1")
@@ -50,7 +49,10 @@ fn main() {
             compute.dispatch(3, 1, 1);
         });
 
-    rgraph.resolve().submit(&device.queue, &mut cache);
+    println!("test");
+
+    rgraph.resolve().submit(&device.queue, &mut cache).unwrap();
+    println!("test");
 
     let slice: &[f32] = cast_slice(screen_13::prelude::Buffer::mapped_slice(&i));
 
