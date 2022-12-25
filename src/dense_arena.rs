@@ -1,6 +1,6 @@
 use std::ops::{Index, IndexMut};
 
-#[derive(Debug, Clone, Copy)]
+#[derive(Debug, Clone, Copy, Hash, Eq, PartialOrd, Ord, PartialEq)]
 pub struct Key {
     idx: usize,
     // even = vacant, odd = occupied

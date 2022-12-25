@@ -4,30 +4,46 @@ use std::{collections::HashMap, sync::Arc};
 use crate::{buffer::Buffer, dense_arena::Key};
 
 pub struct Accel {
+    device: Arc<Device>,
     tlas: Tlas,
-    meshes: HashMap<Key, Blas<glam::Vec3>>,
+    meshes: HashMap<Key, Blas>,
 }
 
-pub struct BlasInfo<'a, V> {
-    pub indices: &'a Arc<Buffer<u32>>,
-    pub positions: &'a Arc<Buffer<V>>,
+impl Accel {
+    fn create(device: &Arc<Device>) -> Self {
+        Self {
+            device: device.clone(),
+            tlas: Tlas::create(device, &[]).unwrap(),
+            meshes: HashMap::default(),
+        }
+    }
+    fn insert(
+        &mut self,
+        key: Key,
+        indices: &Arc<Buffer<u32>>,
+        positions: &Arc<Buffer<glam::Vec3>>,
+    ) {
+        self.meshes
+            .insert(key, Blas::create(&self.device, indices, positions));
+    }
+    fn update(&self, cache: &mut HashPool, rgraph: &mut RenderGraph) {
+        for (key, blas) in self.meshes.iter() {
+            blas.build(cache, rgraph);
+        }
+    }
 }
 
-pub struct Blas<V> {
+pub struct Blas {
     pub accel: Arc<AccelerationStructure>,
     // Not sure about the use of weaks.
     pub indices: Arc<Buffer<u32>>,
-    pub positions: Arc<Buffer<V>>,
+    pub positions: Arc<Buffer<glam::Vec3>>,
     geometry_info: AccelerationStructureGeometryInfo,
     size: AccelerationStructureSize,
 }
 
-impl<V> Blas<V> {
-    pub fn build(
-        &self,
-        cache: &mut HashPool,
-        rgraph: &mut RenderGraph,
-    ) -> AnyAccelerationStructureNode {
+impl Blas {
+    pub fn build(&self, cache: &mut HashPool, rgraph: &mut RenderGraph) {
         //let geometry = scene.geometries.get(self.geometry).unwrap();
         let indices = self.indices.clone();
         let positions = self.positions.clone();
@@ -67,13 +83,17 @@ impl<V> Blas<V> {
                     }],
                 )
             });
-        AnyAccelerationStructureNode::AccelerationStructure(accel_node)
+        //AnyAccelerationStructureNode::AccelerationStructure(accel_node)
     }
     // Maybee blas should safe the index of the indices/positions.
-    pub fn create(device: &Arc<Device>, info: &BlasInfo<V>) -> Self {
+    pub fn create(
+        device: &Arc<Device>,
+        indices: &Arc<Buffer<u32>>,
+        positions: &Arc<Buffer<glam::Vec3>>,
+    ) -> Self {
         //let triangle_count = geometry.indices.count() / 3;
-        let triangle_count = info.indices.count() / 3;
-        let vertex_count = info.positions.count();
+        let triangle_count = indices.count() / 3;
+        let vertex_count = positions.count();
         //let vertex_count = geometry.positions.count();
 
         let geometry_info = AccelerationStructureGeometryInfo {
@@ -84,16 +104,16 @@ impl<V> Blas<V> {
                 flags: vk::GeometryFlagsKHR::OPAQUE,
                 geometry: AccelerationStructureGeometryData::Triangles {
                     index_data: DeviceOrHostAddress::DeviceAddress(
-                        screen_13::prelude::Buffer::device_address(&info.indices.buf),
+                        screen_13::prelude::Buffer::device_address(&indices.buf),
                     ),
                     index_type: vk::IndexType::UINT32,
                     transform_data: None,
                     max_vertex: vertex_count as _,
                     vertex_data: DeviceOrHostAddress::DeviceAddress(
-                        screen_13::prelude::Buffer::device_address(&info.positions.buf),
+                        screen_13::prelude::Buffer::device_address(&positions.buf),
                     ),
                     vertex_format: vk::Format::R32G32B32_SFLOAT,
-                    vertex_stride: std::mem::size_of::<V>() as _,
+                    vertex_stride: std::mem::size_of::<glam::Vec3>() as _,
                 },
             }],
         };
@@ -109,8 +129,8 @@ impl<V> Blas<V> {
         Self {
             //geometry: gkey,
             accel: Arc::new(accel),
-            indices: info.indices.clone(),
-            positions: info.positions.clone(),
+            indices: indices.clone(),
+            positions: positions.clone(),
             geometry_info,
             size: accel_size,
         }
