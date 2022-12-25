@@ -3,9 +3,9 @@ use std::sync::Arc;
 use screen_13::prelude::vk::BufferUsageFlags;
 use screen_13::prelude::*;
 
-use self::array::Array;
+//use self::array::Array;
 mod accel;
-mod array;
+//mod array;
 mod buffer;
 mod dense_arena;
 mod mesh;

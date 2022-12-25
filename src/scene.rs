@@ -1,10 +1,10 @@
-use crate::array::Array;
+use crate::buffer::Buffer;
 use glam::Vec3;
 use screen_13::prelude::*;
 use std::sync::Arc;
 
 pub struct Mesh {
-    indices: Array<u32>,
-    positions: Array<Vec3>,
+    indices: Buffer<u32>,
+    positions: Buffer<Vec3>,
     device: Arc<Device>,
 }
