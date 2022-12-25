@@ -6,6 +6,7 @@ use screen_13::prelude::*;
 use self::array::Array;
 //mod accel;
 mod array;
+mod buffer;
 mod dense_arena;
 mod mesh;
 mod sbt;
