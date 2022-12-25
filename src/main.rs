@@ -4,7 +4,7 @@ use screen_13::prelude::vk::BufferUsageFlags;
 use screen_13::prelude::*;
 
 use self::array::Array;
-//mod accel;
+mod accel;
 mod array;
 mod buffer;
 mod dense_arena;

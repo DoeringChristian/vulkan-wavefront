@@ -60,6 +60,30 @@ impl<T: bytemuck::Pod> Buffer<T> {
     }
 }
 impl<T> Buffer<T> {
+    pub unsafe fn from_slice_unsafe(
+        device: &Arc<Device>,
+        data: &[T],
+        usage: vk::BufferUsageFlags,
+    ) -> Self {
+        let count = data.len();
+        let size = size_of::<T>() * count;
+        let data = unsafe {
+            std::slice::from_raw_parts(
+                data as *const _ as *const _,
+                data.len() * std::mem::size_of::<T>(),
+            )
+        };
+        let buf = screen_13::prelude::Buffer::create_from_slice(device, usage, data).unwrap();
+        Self {
+            buf: Arc::new(buf),
+            count: data.len(),
+            size,
+            device: device.clone(),
+            _ty: PhantomData,
+        }
+    }
+}
+impl<T> Buffer<T> {
     #[inline]
     pub fn count(&self) -> usize {
         self.count
