@@ -18,7 +18,7 @@ fn main() {
     //let device = Arc::new(Device::new(config).unwrap());
     //let arr = Array::create(&device, &[1, 2, 3], BufferUsageFlags::STORAGE_BUFFER);
     let cfg = DriverConfig::new().build();
-    let device = Arc::new(Device::new(cfg));
+    let device = Arc::new(Device::new(cfg).unwrap());
 
     let cppl = ComputePipeline::create(
         &device,

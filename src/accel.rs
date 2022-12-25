@@ -1,40 +1,36 @@
 use screen_13::prelude::*;
-use slotmap::DefaultKey;
-use std::{
-    collections::HashMap,
-    sync::{Arc, Weak},
-};
+use std::{collections::HashMap, sync::Arc};
 
 use crate::{buffer::Buffer, dense_arena::Key};
 
 pub struct Accel {
     tlas: Tlas,
-    blases: HashMap<Key, Blas>,
+    meshes: HashMap<Key, Blas<glam::Vec3>>,
 }
 
-pub struct BlasInfo<'a> {
+pub struct BlasInfo<'a, V> {
     pub indices: &'a Arc<Buffer<u32>>,
-    pub positions: &'a Arc<Buffer<glam::Vec4>>,
+    pub positions: &'a Arc<Buffer<V>>,
 }
 
-pub struct Blas {
+pub struct Blas<V> {
     pub accel: Arc<AccelerationStructure>,
     // Not sure about the use of weaks.
     pub indices: Arc<Buffer<u32>>,
-    pub positions: Arc<Buffer<glam::Vec3>>,
+    pub positions: Arc<Buffer<V>>,
     geometry_info: AccelerationStructureGeometryInfo,
     size: AccelerationStructureSize,
 }
 
-impl Blas {
+impl<V> Blas<V> {
     pub fn build(
         &self,
         cache: &mut HashPool,
         rgraph: &mut RenderGraph,
     ) -> AnyAccelerationStructureNode {
         //let geometry = scene.geometries.get(self.geometry).unwrap();
-        let indices = self.indices;
-        let positions = self.positions;
+        let indices = self.indices.clone();
+        let positions = self.positions.clone();
         let index_node = rgraph.bind_node(&indices.buf);
         let vertex_node = rgraph.bind_node(&positions.buf);
         let accel_node = rgraph.bind_node(&self.accel);
@@ -74,7 +70,7 @@ impl Blas {
         AnyAccelerationStructureNode::AccelerationStructure(accel_node)
     }
     // Maybee blas should safe the index of the indices/positions.
-    pub fn create(device: &Arc<Device>, info: &BlasInfo) -> Self {
+    pub fn create(device: &Arc<Device>, info: &BlasInfo<V>) -> Self {
         //let triangle_count = geometry.indices.count() / 3;
         let triangle_count = info.indices.count() / 3;
         let vertex_count = info.positions.count();
@@ -97,7 +93,7 @@ impl Blas {
                         screen_13::prelude::Buffer::device_address(&info.positions.buf),
                     ),
                     vertex_format: vk::Format::R32G32B32_SFLOAT,
-                    vertex_stride: std::mem::size_of::<Vertex>() as _,
+                    vertex_stride: std::mem::size_of::<V>() as _,
                 },
             }],
         };
@@ -113,8 +109,8 @@ impl Blas {
         Self {
             //geometry: gkey,
             accel: Arc::new(accel),
-            indices: Arc::downgrade(&info.indices),
-            positions: Arc::downgrade(&info.positions),
+            indices: info.indices.clone(),
+            positions: info.positions.clone(),
             geometry_info,
             size: accel_size,
         }
