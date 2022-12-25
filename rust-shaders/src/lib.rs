@@ -24,6 +24,7 @@ pub unsafe fn convert_u_to_ptr<T>(handle: u64) -> *mut T {
 pub fn main_cp(
     #[spirv(global_invocation_id)] idx: UVec3,
     #[spirv(storage_buffer, descriptor_set = 0, binding = 0)] i: &[f32],
-    #[spirv(storage_buffer, descriptor_set = 0, binding = 1)] o: &[f32],
+    #[spirv(storage_buffer, descriptor_set = 0, binding = 1)] o: &mut [f32],
 ) {
+    o[idx.x as usize] = i[idx.x as usize] + 1.;
 }
