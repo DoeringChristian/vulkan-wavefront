@@ -5,18 +5,18 @@ use std::{
     sync::{Arc, Weak},
 };
 
-use crate::{
-    array::Array,
-    model::{Index, Vertex},
-};
+use crate::{array::Array, dense_arena::Key};
 
 use super::buffers::*;
 
-pub struct Accel {}
+pub struct Accel {
+    tlas: Tlas,
+    blases: HashMap<Key, Blas>,
+}
 
 pub struct BlasInfo<'a> {
-    pub indices: &'a Arc<Array<Index>>,
-    pub positions: &'a Arc<Array<Vertex>>,
+    pub indices: &'a Arc<Array<u32>>,
+    pub positions: &'a Arc<Array<glam::Vec4>>,
 }
 
 pub struct Blas {

@@ -11,3 +11,6 @@ inline-spirv = "0.1.5"
 glam = "0.22"
 crevice = {version = "0.12.0", features = ["glam"]}
 bytemuck = {version = "1.12.3", features = ["derive"]}
+
+[build-dependencies]
+spirv-builder = {git = "https://github.com/DoeringChristian/rust-gpu.git", branch = "u_to_ptr"}
