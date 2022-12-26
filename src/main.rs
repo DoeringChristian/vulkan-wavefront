@@ -16,29 +16,31 @@ mod scene;
 mod types;
 
 fn main() {
+    pretty_env_logger::init();
     const SHADER: &[u8] = include_bytes!(env!("rust_shaders.spv"));
     //let device = Arc::new(Device::new(config).unwrap());
     //let arr = Array::create(&device, &[1, 2, 3], BufferUsageFlags::STORAGE_BUFFER);
-    let cfg = DriverConfig::new().build();
-    let device = Arc::new(Device::new(cfg).unwrap());
-    let mut cache = LazyPool::new(&device);
+    let sc13 = EventLoop::new().debug(true).build().unwrap();
+    let mut cache = LazyPool::new(&sc13.device);
 
     let cpplinfo = ComputePipelineInfo::new(SHADER)
-        .entry_name("main_cpp".into())
+        .entry_name("main_cp".into())
         .build();
 
-    let cppl = Arc::new(ComputePipeline::create(&device, cpplinfo).unwrap());
-    println!("test");
+    let cppl = Arc::new(ComputePipeline::create(&sc13.device, cpplinfo).unwrap());
 
     let mut rgraph = RenderGraph::new();
 
-    let i = Buffer::from_slice(&device, &[0., 1., 2.], vk::BufferUsageFlags::STORAGE_BUFFER);
-    let o = Buffer::from_slice(&device, &[0; 3], vk::BufferUsageFlags::STORAGE_BUFFER);
+    let i = Buffer::from_slice(
+        &sc13.device,
+        &[0., 1., 2.],
+        vk::BufferUsageFlags::STORAGE_BUFFER,
+    );
+    let o =
+        Buffer::from_slice_mappable(&sc13.device, &[0; 3], vk::BufferUsageFlags::STORAGE_BUFFER);
 
     let i_node = rgraph.bind_node(&i.buf);
     let o_node = rgraph.bind_node(&o.buf);
-
-    println!("test");
 
     rgraph
         .begin_pass("Add 1")
@@ -49,10 +51,7 @@ fn main() {
             compute.dispatch(3, 1, 1);
         });
 
-    println!("test");
-
-    rgraph.resolve().submit(&device.queue, &mut cache).unwrap();
-    println!("test");
+    rgraph.resolve().submit(&mut cache, 0).unwrap();
 
     let slice: &[f32] = cast_slice(screen_13::prelude::Buffer::mapped_slice(&i));
 

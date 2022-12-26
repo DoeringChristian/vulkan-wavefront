@@ -58,6 +58,25 @@ impl<T: bytemuck::Pod> Buffer<T> {
             _ty: PhantomData,
         }
     }
+    pub fn from_slice_mappable(
+        device: &Arc<Device>,
+        data: &[T],
+        usage: vk::BufferUsageFlags,
+    ) -> Self {
+        let count = data.len();
+        let size = size_of::<T>() * count;
+        let mut buf =
+            screen_13::prelude::Buffer::create(device, BufferInfo::new_mappable(size as _, usage))
+                .unwrap();
+        screen_13::prelude::Buffer::copy_from_slice(&mut buf, 0, cast_slice(data));
+        Self {
+            buf: Arc::new(buf),
+            count: data.len(),
+            size,
+            device: device.clone(),
+            _ty: PhantomData,
+        }
+    }
 }
 impl<T> Buffer<T> {
     pub unsafe fn from_slice_unsafe(
