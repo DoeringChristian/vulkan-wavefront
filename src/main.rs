@@ -41,8 +41,8 @@ void main(){
     }
     .as_slice();
 
-    let cpplinfo = ComputePipelineInfo::new(spv)
-        .entry_name("main".into())
+    let cpplinfo = ComputePipelineInfo::new(SHADER)
+        .entry_name("main_cp".into())
         .build();
 
     let cppl = Arc::new(ComputePipeline::create(&sc13.device, cpplinfo).unwrap());
@@ -80,14 +80,11 @@ void main(){
 
     rgraph.resolve().submit(&mut cache, 0).unwrap();
 
+    unsafe {
+        sc13.device.device_wait_idle().unwrap();
+    }
+
     let slice: &[f32] = cast_slice(screen_13::prelude::Buffer::mapped_slice(&o));
 
     println!("{:?}", slice);
-
-    sc13.run(move |frame| {
-        frame
-            .render_graph
-            .clear_color_image_value(frame.swapchain_image, [1., 0., 0., 1.]);
-    })
-    .unwrap();
 }
