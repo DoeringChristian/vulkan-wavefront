@@ -35,7 +35,7 @@ layout(set = 0, binding = 1)buffer Out{
 };
 
 void main(){
-    o[int(gl_GlobalInvocationID.x)] = o[int(gl_GlobalInvocationID.x)];
+    o[int(gl_GlobalInvocationID.x)] = i[int(gl_GlobalInvocationID.x)];
 }
             "#, comp
     }
@@ -82,5 +82,12 @@ void main(){
 
     let slice: &[f32] = cast_slice(screen_13::prelude::Buffer::mapped_slice(&o));
 
-    println!("{:?}", slice)
+    println!("{:?}", slice);
+
+    sc13.run(move |frame| {
+        frame
+            .render_graph
+            .clear_color_image_value(frame.swapchain_image, [1., 0., 0., 1.]);
+    })
+    .unwrap();
 }
