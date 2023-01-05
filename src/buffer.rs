@@ -8,15 +8,23 @@ use std::ops::{Deref, DerefMut};
 use std::sync::Arc;
 
 #[derive(Debug)]
-pub struct Buffer<T> {
+pub struct TypedBuffer<T> {
     _ty: PhantomData<T>,
-    pub buf: Arc<screen_13::prelude::Buffer>,
+    buf: Arc<screen_13::prelude::Buffer>,
     device: Arc<Device>,
     count: usize,
     size: usize,
 }
 
-impl<T: AsStd140> Buffer<T> {
+impl<T> Deref for TypedBuffer<T> {
+    type Target = Arc<screen_13::prelude::Buffer>;
+
+    fn deref(&self) -> &Self::Target {
+        &self.buf
+    }
+}
+
+impl<T: AsStd140> TypedBuffer<T> {
     pub fn from_slice_std140(
         device: &Arc<Device>,
         data: &[T],
@@ -44,8 +52,12 @@ impl<T: AsStd140> Buffer<T> {
         }
     }
 }
-impl<T: bytemuck::Pod> Buffer<T> {
-    pub fn from_slice(device: &Arc<Device>, data: &[T], usage: vk::BufferUsageFlags) -> Self {
+impl<T: bytemuck::Pod> TypedBuffer<T> {
+    pub fn create_from_slice(
+        device: &Arc<Device>,
+        usage: vk::BufferUsageFlags,
+        data: &[T],
+    ) -> Self {
         let count = data.len();
         let size = size_of::<T>() * count;
         let buf =
@@ -78,7 +90,7 @@ impl<T: bytemuck::Pod> Buffer<T> {
         }
     }
 }
-impl<T> Buffer<T> {
+impl<T> TypedBuffer<T> {
     pub unsafe fn from_slice_unsafe(
         device: &Arc<Device>,
         data: &[T],
@@ -102,7 +114,7 @@ impl<T> Buffer<T> {
         }
     }
 }
-impl<T> Buffer<T> {
+impl<T> TypedBuffer<T> {
     #[inline]
     pub fn count(&self) -> usize {
         self.count
@@ -110,13 +122,5 @@ impl<T> Buffer<T> {
     #[inline]
     pub fn size(&self) -> usize {
         self.size
-    }
-}
-
-impl<T> Deref for Buffer<T> {
-    type Target = screen_13::prelude::Buffer;
-
-    fn deref(&self) -> &Self::Target {
-        self.buf.deref()
     }
 }
