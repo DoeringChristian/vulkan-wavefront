@@ -33,7 +33,7 @@ impl Blas {
                 .unwrap(),
         );
 
-        let triangle_count = indices.info.size * std::mem::size_of::<u32>() as u64 / 3;
+        let triangle_count = indices.count() as u64 / 3;
         let geometry_info = self.geometry_info.clone();
 
         rgraph
@@ -62,11 +62,11 @@ impl Blas {
         device: &Arc<Device>,
         indices: &Arc<TypedBuffer<u32>>,
         positions: &Arc<TypedBuffer<glam::Vec3>>,
-        vertex_stride: usize,
     ) -> Self {
         //let triangle_count = geometry.indices.count() / 3;
-        let triangle_count = indices.info.size * std::mem::size_of::<u32>() as u64 / 3;
-        let vertex_count = positions.info.size * vertex_stride as u64;
+        let triangle_count = indices.count() as u64 / 3;
+        let vertex_count = positions.count() as u64;
+        let vertex_stride = std::mem::size_of::<glam::Vec3>() as u64;
         //let vertex_count = geometry.positions.count();
 
         let geometry_info = AccelerationStructureGeometryInfo {
@@ -86,7 +86,7 @@ impl Blas {
                         screen_13::prelude::Buffer::device_address(&positions),
                     ),
                     vertex_format: vk::Format::R32G32B32_SFLOAT,
-                    vertex_stride: vertex_stride as _,
+                    vertex_stride: vertex_stride,
                 },
             }],
         };
