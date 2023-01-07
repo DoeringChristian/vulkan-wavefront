@@ -1,12 +1,26 @@
+use std::ops::{Deref, DerefMut};
+
 use bytemuck::{Pod, Zeroable};
 use crevice::std140::{AsStd140, Std140};
 use glam;
 
 #[repr(C)]
 #[derive(Debug, Clone, Copy, Pod, Zeroable)]
-pub struct uint64_t(u64);
+pub struct uint64(pub u64);
+impl Deref for uint64 {
+    type Target = u64;
 
-unsafe impl Std140 for uint64_t {
+    fn deref(&self) -> &Self::Target {
+        &self.0
+    }
+}
+impl DerefMut for uint64 {
+    fn deref_mut(&mut self) -> &mut Self::Target {
+        &mut self.0
+    }
+}
+
+unsafe impl Std140 for uint64 {
     const ALIGNMENT: usize = 64;
 }
 
@@ -40,6 +54,6 @@ pub struct Instance {
     pub mat: glam::Mat4,
 
     pub mat_id: u32,
-    pub indices: uint64_t,
-    pub vertices: uint64_t,
+    pub indices: uint64,
+    pub vertices: uint64,
 }
