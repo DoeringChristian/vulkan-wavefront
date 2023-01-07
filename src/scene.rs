@@ -16,7 +16,7 @@ pub struct Scene {}
 impl Scene {
     pub fn load(path: &Path) -> Self {
         let scene = russimp::scene::Scene::from_file(
-            path.into(),
+            path.to_str().unwrap(),
             vec![
                 PostProcess::CalculateTangentSpace,
                 PostProcess::Triangulate,
@@ -25,6 +25,6 @@ impl Scene {
             ],
         )
         .unwrap();
-        scene.materials
+        Self {}
     }
 }

@@ -13,7 +13,7 @@ pub struct TypedBuffer<T> {
     buf: Arc<screen_13::prelude::Buffer>,
     device: Arc<Device>,
     count: usize,
-    size: usize,
+    stride: usize,
 }
 
 impl<T> Deref for TypedBuffer<T> {
@@ -31,11 +31,11 @@ impl<T: AsStd140> TypedBuffer<T> {
         data: &[T],
     ) -> Self {
         let count = data.len();
-        let size = T::std140_size_static() * count;
+        let stride = T::std140_size_static();
         let buf = Arc::new({
             let mut buf = screen_13::prelude::Buffer::create(
                 device,
-                BufferInfo::new_mappable(size as u64, usage),
+                BufferInfo::new_mappable((stride * count) as u64, usage),
             )
             .unwrap();
             let mut writer =
@@ -46,7 +46,7 @@ impl<T: AsStd140> TypedBuffer<T> {
         Self {
             buf,
             count: data.len(),
-            size,
+            stride,
             device: device.clone(),
             _ty: PhantomData,
         }
@@ -59,13 +59,13 @@ impl<T: bytemuck::Pod> TypedBuffer<T> {
         data: &[T],
     ) -> Self {
         let count = data.len();
-        let size = size_of::<T>() * count;
+        let stride = size_of::<T>();
         let buf =
             screen_13::prelude::Buffer::create_from_slice(device, usage, cast_slice(data)).unwrap();
         Self {
             buf: Arc::new(buf),
             count: data.len(),
-            size,
+            stride,
             device: device.clone(),
             _ty: PhantomData,
         }
@@ -76,15 +76,17 @@ impl<T: bytemuck::Pod> TypedBuffer<T> {
         usage: vk::BufferUsageFlags,
     ) -> Self {
         let count = data.len();
-        let size = size_of::<T>() * count;
-        let mut buf =
-            screen_13::prelude::Buffer::create(device, BufferInfo::new_mappable(size as _, usage))
-                .unwrap();
+        let stride = size_of::<T>();
+        let mut buf = screen_13::prelude::Buffer::create(
+            device,
+            BufferInfo::new_mappable((stride * count) as _, usage),
+        )
+        .unwrap();
         screen_13::prelude::Buffer::copy_from_slice(&mut buf, 0, cast_slice(data));
         Self {
             buf: Arc::new(buf),
             count: data.len(),
-            size,
+            stride,
             device: device.clone(),
             _ty: PhantomData,
         }
@@ -97,18 +99,15 @@ impl<T> TypedBuffer<T> {
         usage: vk::BufferUsageFlags,
     ) -> Self {
         let count = data.len();
-        let size = size_of::<T>() * count;
+        let stride = size_of::<T>();
         let data = unsafe {
-            std::slice::from_raw_parts(
-                data as *const _ as *const _,
-                data.len() * std::mem::size_of::<T>(),
-            )
+            std::slice::from_raw_parts(data as *const _ as *const _, data.len() * stride)
         };
         let buf = screen_13::prelude::Buffer::create_from_slice(device, usage, data).unwrap();
         Self {
             buf: Arc::new(buf),
             count: data.len(),
-            size,
+            stride,
             device: device.clone(),
             _ty: PhantomData,
         }
@@ -121,6 +120,10 @@ impl<T> TypedBuffer<T> {
     }
     #[inline]
     pub fn size(&self) -> usize {
-        self.size
+        self.count * self.stride
+    }
+    #[inline]
+    pub fn stride(&self) -> usize {
+        self.stride
     }
 }
