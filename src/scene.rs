@@ -1,5 +1,5 @@
 use crate::buffer::TypedBuffer;
-use glam::Vec3;
+use crate::dense_arena::Arena;
 use russimp::scene::PostProcess;
 use screen_13::prelude::*;
 use std::path::Path;
@@ -7,11 +7,15 @@ use std::sync::Arc;
 
 pub struct Mesh {
     indices: TypedBuffer<u32>,
-    positions: TypedBuffer<Vec3>,
-    device: Arc<Device>,
+    positions: TypedBuffer<glam::Vec3>,
+    texture_coords: Vec<TypedBuffer<glam::Vec2>>,
+    normals: TypedBuffer<glam::Vec3>,
+    tangents: TypedBuffer<glam::Vec3>,
 }
 
-pub struct Scene {}
+pub struct Scene {
+    meshes: Arena<Mesh>,
+}
 
 impl Scene {
     pub fn load(path: &Path) -> Self {
@@ -25,6 +29,6 @@ impl Scene {
             ],
         )
         .unwrap();
-        Self {}
+        todo!()
     }
 }
