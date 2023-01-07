@@ -5,16 +5,16 @@ use std::{collections::HashMap, sync::Arc};
 use crate::buffer::TypedBuffer;
 use crate::dense_arena::Key;
 
-pub struct Blas {
+pub struct Blas<T> {
     pub accel: Arc<AccelerationStructure>,
     // Not sure about the use of weaks.
     pub indices: Arc<TypedBuffer<u32>>,
-    pub positions: Arc<TypedBuffer<glam::Vec3>>,
+    pub positions: Arc<TypedBuffer<T>>,
     geometry_info: AccelerationStructureGeometryInfo,
     size: AccelerationStructureSize,
 }
 
-impl Blas {
+impl<T> Blas<T> {
     pub fn build(&self, cache: &mut HashPool, rgraph: &mut RenderGraph) {
         //let geometry = scene.geometries.get(self.geometry).unwrap();
         let indices = self.indices.clone();
@@ -61,12 +61,12 @@ impl Blas {
     pub fn create(
         device: &Arc<Device>,
         indices: &Arc<TypedBuffer<u32>>,
-        positions: &Arc<TypedBuffer<glam::Vec3>>,
+        positions: &Arc<TypedBuffer<T>>,
     ) -> Self {
         //let triangle_count = geometry.indices.count() / 3;
         let triangle_count = indices.count() as u64 / 3;
         let vertex_count = positions.count() as u64;
-        let vertex_stride = std::mem::size_of::<glam::Vec3>() as u64;
+        let vertex_stride = std::mem::size_of::<T>() as u64;
         //let vertex_count = geometry.positions.count();
 
         let geometry_info = AccelerationStructureGeometryInfo {

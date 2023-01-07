@@ -25,10 +25,10 @@ impl<T> Deref for TypedBuffer<T> {
 }
 
 impl<T: AsStd140> TypedBuffer<T> {
-    pub fn from_slice_std140(
+    pub fn create_from_slice_std140(
         device: &Arc<Device>,
-        data: &[T],
         usage: vk::BufferUsageFlags,
+        data: &[T],
     ) -> Self {
         let count = data.len();
         let size = T::std140_size_static() * count;
