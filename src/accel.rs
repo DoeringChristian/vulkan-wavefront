@@ -66,7 +66,7 @@ impl<T> Blas<T> {
         //let triangle_count = geometry.indices.count() / 3;
         let triangle_count = indices.count() as u64 / 3;
         let vertex_count = positions.count() as u64;
-        let vertex_stride = std::mem::size_of::<T>() as u64;
+        let vertex_stride = positions.stride() as u64;
         //let vertex_count = geometry.positions.count();
 
         let geometry_info = AccelerationStructureGeometryInfo {
