@@ -57,7 +57,6 @@ impl<T> Blas<T> {
             });
         //AnyAccelerationStructureNode::AccelerationStructure(accel_node)
     }
-    // Maybee blas should safe the index of the indices/positions.
     pub fn create(
         device: &Arc<Device>,
         indices: &Arc<TypedBuffer<u32>>,

@@ -93,27 +93,6 @@ impl<T: bytemuck::Pod> TypedBuffer<T> {
     }
 }
 impl<T> TypedBuffer<T> {
-    pub unsafe fn from_slice_unsafe(
-        device: &Arc<Device>,
-        data: &[T],
-        usage: vk::BufferUsageFlags,
-    ) -> Self {
-        let count = data.len();
-        let stride = size_of::<T>();
-        let data = unsafe {
-            std::slice::from_raw_parts(data as *const _ as *const _, data.len() * stride)
-        };
-        let buf = screen_13::prelude::Buffer::create_from_slice(device, usage, data).unwrap();
-        Self {
-            buf: Arc::new(buf),
-            count: data.len(),
-            stride,
-            device: device.clone(),
-            _ty: PhantomData,
-        }
-    }
-}
-impl<T> TypedBuffer<T> {
     #[inline]
     pub fn count(&self) -> usize {
         self.count
