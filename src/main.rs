@@ -9,7 +9,7 @@ use screen_13::prelude::*;
 use crate::scene::Scene;
 
 //use self::array::Array;
-//mod accel;
+mod accel;
 //mod array;
 mod buffer;
 //mod dense_arena;
@@ -25,7 +25,8 @@ fn main() {
     let sc13 = EventLoop::new().debug(true).build().unwrap();
     let mut cache = LazyPool::new(&sc13.device);
 
-    let scene = Scene::load(&sc13.device, &Path::new("assets/scenes/default.fbx"));
+    let mut scene = Scene::load(&sc13.device, &Path::new("assets/scenes/default.fbx"));
+    scene.upload();
 
     //println!("{:#?}", scene);
 

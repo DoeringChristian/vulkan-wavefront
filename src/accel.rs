@@ -1,9 +1,9 @@
 use screen_13::prelude::*;
 use std::mem::size_of;
+use std::ops::Range;
 use std::{collections::HashMap, sync::Arc};
 
 use crate::buffer::TypedBuffer;
-use crate::dense_arena::Key;
 
 pub struct Blas<T> {
     pub accel: Arc<AccelerationStructure>,
@@ -60,10 +60,11 @@ impl<T> Blas<T> {
     pub fn create(
         device: &Arc<Device>,
         indices: &Arc<TypedBuffer<u32>>,
+        index_range: Range<usize>,
         positions: &Arc<TypedBuffer<T>>,
     ) -> Self {
         //let triangle_count = geometry.indices.count() / 3;
-        let triangle_count = indices.count() as u64 / 3;
+        let triangle_count = (index_range.end - index_range.start) as u64 / 3;
         let vertex_count = positions.count() as u64;
         let vertex_stride = positions.stride() as u64;
         //let vertex_count = geometry.positions.count();
@@ -76,7 +77,8 @@ impl<T> Blas<T> {
                 flags: vk::GeometryFlagsKHR::OPAQUE,
                 geometry: AccelerationStructureGeometryData::Triangles {
                     index_data: DeviceOrHostAddress::DeviceAddress(
-                        screen_13::prelude::Buffer::device_address(&indices),
+                        screen_13::prelude::Buffer::device_address(&indices)
+                            + index_range.start as u64,
                     ),
                     index_type: vk::IndexType::UINT32,
                     transform_data: None,

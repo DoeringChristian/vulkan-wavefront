@@ -1,3 +1,4 @@
+use crate::accel::{Blas, Tlas};
 use crate::buffer::TypedBuffer;
 use bytemuck::{Pod, Zeroable};
 use russimp::scene::PostProcess;
@@ -8,32 +9,66 @@ use std::sync::Arc;
 
 #[derive(Debug, Clone, Copy, Zeroable, Pod)]
 #[repr(C)]
-struct Slice {
-    pub offset: u32,
-    pub len: u32,
+struct Range {
+    pub start: usize,
+    pub end: usize,
 }
 
-#[derive(Debug, Clone, Copy, Zeroable, Pod)]
-#[repr(C)]
+impl From<std::ops::Range<usize>> for Range {
+    fn from(value: std::ops::Range<usize>) -> Self {
+        Self {
+            start: value.start,
+            end: value.end,
+        }
+    }
+}
+impl From<Range> for std::ops::Range<usize> {
+    fn from(value: Range) -> Self {
+        Self {
+            start: value.start,
+            end: value.end,
+        }
+    }
+}
+
+#[derive(Debug, Clone)]
 struct Mesh {
-    indices: Slice,
-    positions: Slice,
+    indices: std::ops::Range<usize>,
+    positions: std::ops::Range<usize>,
 }
 
 #[derive(Debug, Clone, Copy, Zeroable, Pod)]
 #[repr(C)]
-struct Instance {
-    transform: [f32; 16],
-    mesh_idx: u32,
+struct MeshData {
+    indices: Range,
+    positions: Range,
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone, Copy)]
+struct Instance {
+    transform: glam::Mat4,
+    mesh_idx: usize,
+}
+
+#[derive(Debug, Clone, Copy, Zeroable, Pod)]
+#[repr(C)]
+struct InstanceData {
+    transform: [f32; 16],
+    mesh_idx: usize,
+}
+
 pub struct Scene {
     device: Arc<Device>,
-    positions: TypedBuffer<glam::Vec3>,
-    indices: TypedBuffer<u32>,
-    meshes: TypedBuffer<Mesh>,
-    instances: TypedBuffer<Instance>,
+    positions: Arc<TypedBuffer<glam::Vec3>>,
+    indices: Arc<TypedBuffer<u32>>,
+    meshes: Vec<Mesh>,
+    instances: Vec<Instance>,
+
+    blases: Vec<Blas<glam::Vec3>>,
+    tlas: Option<Tlas>,
+
+    instance_data: Option<Arc<TypedBuffer<InstanceData>>>,
+    mesh_data: Option<Arc<TypedBuffer<MeshData>>>,
 }
 
 fn matrix4x4_to_mat4(src: &Matrix4x4) -> glam::Mat4 {
@@ -52,7 +87,7 @@ fn load_instances(
 
     for mesh in node.meshes.iter() {
         instances.push(Instance {
-            transform: transform.to_cols_array(),
+            transform,
             mesh_idx: *mesh as _,
         })
     }
@@ -95,13 +130,13 @@ impl Scene {
                 indices.push(face.0[2]);
             }
             meshes.push(Mesh {
-                indices: Slice {
-                    offset: indices_offset as _,
-                    len: (indices.len() - indices_offset) as _,
+                indices: std::ops::Range {
+                    start: indices_offset,
+                    end: indices.len(),
                 },
-                positions: Slice {
-                    offset: positions_offset as _,
-                    len: (positions.len() - positions_offset) as _,
+                positions: std::ops::Range {
+                    start: positions_offset,
+                    end: positions.len(),
                 },
             })
         }
@@ -113,28 +148,96 @@ impl Scene {
             glam::Mat4::IDENTITY,
         );
         Self {
-            meshes: TypedBuffer::create_from_slice(
+            meshes,
+            instances,
+            positions: Arc::new(TypedBuffer::create_from_slice(
                 device,
-                vk::BufferUsageFlags::STORAGE_BUFFER,
-                &meshes,
-            ),
-            positions: TypedBuffer::create_from_slice(
-                device,
-                vk::BufferUsageFlags::STORAGE_BUFFER,
+                vk::BufferUsageFlags::STORAGE_BUFFER | vk::BufferUsageFlags::SHADER_DEVICE_ADDRESS,
                 &positions,
-            ),
-            indices: TypedBuffer::create_from_slice(
+            )),
+            indices: Arc::new(TypedBuffer::create_from_slice(
                 device,
-                vk::BufferUsageFlags::STORAGE_BUFFER,
+                vk::BufferUsageFlags::STORAGE_BUFFER | vk::BufferUsageFlags::SHADER_DEVICE_ADDRESS,
                 &indices,
-            ),
-            instances: TypedBuffer::create_from_slice(
-                device,
-                vk::BufferUsageFlags::STORAGE_BUFFER,
-                &instances,
-            ),
+            )),
             device: device.clone(),
+
+            blases: vec![],
+            tlas: None,
+            mesh_data: None,
+            instance_data: None,
         }
     }
-    pub fn update(&mut self) {}
+    pub fn upload(&mut self) {
+        for instance in self.instances.iter() {
+            self.blases.push(Blas::create(
+                &self.device,
+                &self.indices,
+                self.meshes[instance.mesh_idx].indices.clone().into(),
+                &self.positions,
+            ))
+        }
+        let instances = self
+            .instances
+            .iter()
+            .enumerate()
+            .map(|(i, instance)| vk::AccelerationStructureInstanceKHR {
+                transform: vk::TransformMatrixKHR {
+                    matrix: [
+                        instance.transform.x_axis.x,
+                        instance.transform.y_axis.x,
+                        instance.transform.z_axis.x,
+                        instance.transform.w_axis.x,
+                        instance.transform.x_axis.y,
+                        instance.transform.y_axis.y,
+                        instance.transform.z_axis.y,
+                        instance.transform.w_axis.y,
+                        instance.transform.x_axis.z,
+                        instance.transform.y_axis.z,
+                        instance.transform.z_axis.z,
+                        instance.transform.w_axis.z,
+                    ],
+                },
+                instance_custom_index_and_mask: vk::Packed24_8::new(i as _, 0xff),
+                instance_shader_binding_table_record_offset_and_flags: vk::Packed24_8::new(
+                    0,
+                    vk::GeometryInstanceFlagsKHR::TRIANGLE_FACING_CULL_DISABLE.as_raw() as _,
+                ),
+                acceleration_structure_reference: vk::AccelerationStructureReferenceKHR {
+                    device_handle: AccelerationStructure::device_address(&self.blases[i].accel),
+                },
+            })
+            .collect::<Vec<_>>();
+
+        self.tlas = Tlas::create(&self.device, &instances);
+
+        let mesh_data = self
+            .meshes
+            .iter()
+            .map(|mesh| MeshData {
+                indices: mesh.indices.clone().into(),
+                positions: mesh.positions.clone().into(),
+            })
+            .collect::<Vec<_>>();
+
+        let instance_data = self
+            .instances
+            .iter()
+            .map(|instance| InstanceData {
+                transform: instance.transform.to_cols_array(),
+                mesh_idx: instance.mesh_idx,
+            })
+            .collect::<Vec<_>>();
+
+        self.mesh_data = Some(Arc::new(TypedBuffer::create_from_slice(
+            &self.device,
+            vk::BufferUsageFlags::STORAGE_BUFFER,
+            &mesh_data,
+        )));
+        self.instance_data = Some(Arc::new(TypedBuffer::create_from_slice(
+            &self.device,
+            vk::BufferUsageFlags::STORAGE_BUFFER,
+            &instance_data,
+        )));
+    }
 }
