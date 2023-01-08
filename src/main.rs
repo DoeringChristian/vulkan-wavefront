@@ -27,6 +27,8 @@ fn main() {
 
     let scene = Scene::load(&sc13.device, &Path::new("assets/scenes/default.fbx"));
 
+    println!("{:#?}", scene);
+
     unsafe {
         sc13.device.device_wait_idle().unwrap();
     }
