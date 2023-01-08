@@ -9,7 +9,7 @@ edition = "2021"
 screen-13 = {git = "https://github.com/attackgoat/screen-13"}
 pretty_env_logger = "0.4.0"
 inline-spirv = "0.1.5"
-glam = "0.22"
+glam = {version = "0.22", features = ["bytemuck"]}
 crevice = {version = "0.12.0", features = ["glam"]}
 bytemuck = {version = "1.12.3", features = ["derive"]}
 russimp = {version = "2.0.1", features = ["prebuilt"]}

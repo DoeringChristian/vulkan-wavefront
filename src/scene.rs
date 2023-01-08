@@ -1,52 +1,41 @@
 use crate::buffer::TypedBuffer;
-use crate::dense_arena::{Arena, Key};
-use crate::types::uint64;
-use crevice::std140::AsStd140;
+use bytemuck::{Pod, Zeroable};
 use russimp::scene::PostProcess;
 use screen_13::prelude::*;
-use std::collections::HashMap;
 use std::path::Path;
 use std::sync::Arc;
 
-pub struct Instance {
-    pub transform: glam::Mat4,
-    mesh: Key,
+#[derive(Clone, Copy, Zeroable, Pod)]
+#[repr(C)]
+struct Slice {
+    pub offset: u32,
+    pub len: u32,
 }
 
-#[derive(AsStd140)]
-pub struct InstanceData {
-    pub transform: glam::Mat4,
-    pub mesh_idx: u32,
+#[derive(Clone, Copy, Zeroable, Pod)]
+#[repr(C)]
+struct Mesh {
+    indices: Slice,
+    positions: Slice,
 }
 
-pub struct Mesh {
-    pub indices: TypedBuffer<u32>,
-    pub positions: TypedBuffer<glam::Vec3>,
-    //pub texture_co: Vec<TypedBuffer<glam::Vec2>>,
-    pub normals: TypedBuffer<glam::Vec3>,
-    pub tangents: TypedBuffer<glam::Vec3>,
-}
-
-#[derive(AsStd140)]
-pub struct MeshData {
-    pub indices: uint64,
-    pub positions: uint64,
-    //pub texture_co: uint64,
-    pub normals: uint64,
-    pub tangents: uint64,
+#[derive(Clone, Copy, Zeroable, Pod)]
+#[repr(C)]
+struct Instance {
+    transform: [f32; 16],
+    mesh_idx: u32,
 }
 
 pub struct Scene {
-    meshes: Arena<Mesh>,
-    instances: Arena<Instance>,
     device: Arc<Device>,
-
-    mesh_data: Option<TypedBuffer<MeshData>>,
-    instance_data: Option<TypedBuffer<InstanceData>>,
+    positions: TypedBuffer<glam::Vec3>,
+    indices: TypedBuffer<u32>,
+    meshes: TypedBuffer<Mesh>,
+    instances: TypedBuffer<Instance>,
 }
 
 impl Scene {
-    pub fn load(path: &Path) -> Self {
+    pub fn load(device: &Arc<Device>, path: &Path) -> Self {
         let scene = russimp::scene::Scene::from_file(
             path.to_str().unwrap(),
             vec![
@@ -57,44 +46,65 @@ impl Scene {
             ],
         )
         .unwrap();
-        todo!()
-    }
-    pub fn update(&mut self) {
-        let mut mesh_key2idx: HashMap<Key, usize> = HashMap::default();
-        let data = self
-            .meshes
-            .iter()
-            .enumerate()
-            .map(|(idx, (key, mesh))| {
-                mesh_key2idx.insert(*key, idx);
-                MeshData {
-                    indices: uint64(Buffer::device_address(&mesh.indices)),
-                    positions: uint64(Buffer::device_address(&mesh.positions)),
-                    normals: uint64(Buffer::device_address(&mesh.normals)),
-                    tangents: uint64(Buffer::device_address(&mesh.tangents)),
-                }
+        let mut positions = vec![];
+        let mut indices = vec![];
+        let mut meshes = vec![];
+        for mesh in scene.meshes.iter() {
+            let positions_offset = positions.len();
+            for v in mesh.vertices.iter() {
+                positions.push(glam::Vec3 {
+                    x: v.x,
+                    y: v.y,
+                    z: v.z,
+                })
+            }
+            let indices_offset = indices.len();
+            for face in mesh.faces.iter() {
+                indices.push(face.0[0]);
+                indices.push(face.0[1]);
+                indices.push(face.0[2]);
+            }
+            meshes.push(Mesh {
+                indices: Slice {
+                    offset: indices_offset as _,
+                    len: (indices.len() - indices_offset) as _,
+                },
+                positions: Slice {
+                    offset: positions_offset as _,
+                    len: (positions.len() - positions_offset) as _,
+                },
             })
-            .collect::<Vec<_>>();
-        let data = TypedBuffer::create_from_slice_std140(
-            &self.device,
-            vk::BufferUsageFlags::STORAGE_BUFFER,
-            &data,
-        );
-        self.mesh_data = Some(data);
-
-        let data = self
-            .instances
-            .values()
-            .map(|instance| InstanceData {
-                transform: instance.transform,
-                mesh_idx: mesh_key2idx[&instance.mesh] as u32,
+        }
+        let mut instances = vec![];
+        for (i, _) in meshes.iter().enumerate() {
+            instances.push(Instance {
+                mesh_idx: i as _,
+                transform: glam::Mat4::IDENTITY.to_cols_array(),
             })
-            .collect::<Vec<_>>();
-        let data = TypedBuffer::create_from_slice_std140(
-            &self.device,
-            vk::BufferUsageFlags::STORAGE_BUFFER,
-            &data,
-        );
-        self.instance_data = Some(data);
+        }
+        Self {
+            meshes: TypedBuffer::create_from_slice(
+                device,
+                vk::BufferUsageFlags::STORAGE_BUFFER,
+                &meshes,
+            ),
+            positions: TypedBuffer::create_from_slice(
+                device,
+                vk::BufferUsageFlags::STORAGE_BUFFER,
+                &positions,
+            ),
+            indices: TypedBuffer::create_from_slice(
+                device,
+                vk::BufferUsageFlags::STORAGE_BUFFER,
+                &indices,
+            ),
+            instances: TypedBuffer::create_from_slice(
+                device,
+                vk::BufferUsageFlags::STORAGE_BUFFER,
+                &instances,
+            ),
+            device: device.clone(),
+        }
     }
+    pub fn update(&mut self) {}
 }
