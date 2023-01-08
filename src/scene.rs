@@ -1,6 +1,7 @@
 use crate::buffer::TypedBuffer;
 use bytemuck::{Pod, Zeroable};
 use russimp::scene::PostProcess;
+use russimp::Matrix4x4;
 use screen_13::prelude::*;
 use std::path::Path;
 use std::sync::Arc;
@@ -35,30 +36,19 @@ pub struct Scene {
     instances: TypedBuffer<Instance>,
 }
 
+fn matrix4x4_to_mat4(src: &Matrix4x4) -> glam::Mat4 {
+    glam::Mat4::from_cols_array(&[
+        src.a1, src.a2, src.a3, src.a4, src.b1, src.b2, src.b3, src.b4, src.c1, src.c2, src.c3,
+        src.c4, src.d1, src.d2, src.d3, src.d4,
+    ])
+}
+
 fn load_instances(
     instances: &mut Vec<Instance>,
     node: &russimp::node::Node,
     transform: glam::Mat4,
 ) {
-    let node_transform = glam::Mat4::from_cols_array(&[
-        node.transformation.a1,
-        node.transformation.a2,
-        node.transformation.a3,
-        node.transformation.a4,
-        node.transformation.b1,
-        node.transformation.b2,
-        node.transformation.b3,
-        node.transformation.b4,
-        node.transformation.c1,
-        node.transformation.c2,
-        node.transformation.c3,
-        node.transformation.c4,
-        node.transformation.d1,
-        node.transformation.d2,
-        node.transformation.d3,
-        node.transformation.d4,
-    ]);
-    let transform = transform * node_transform;
+    let transform = transform * matrix4x4_to_mat4(&node.transformation);
 
     for mesh in node.meshes.iter() {
         instances.push(Instance {
@@ -84,7 +74,7 @@ impl Scene {
             ],
         )
         .unwrap();
-        //println!("{:#?}", scene);
+        println!("{:#?}", scene);
 
         let mut positions = vec![];
         let mut indices = vec![];
