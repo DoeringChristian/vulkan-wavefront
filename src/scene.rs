@@ -175,6 +175,7 @@ impl Scene {
                 &self.indices,
                 self.meshes[instance.mesh_idx].indices.clone().into(),
                 &self.positions,
+                self.meshes[instance.mesh_idx].positions.clone().into(),
             ))
         }
         let instances = self

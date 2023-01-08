@@ -13,6 +13,7 @@ pub struct Blas<T> {
     geometry_info: AccelerationStructureGeometryInfo,
     size: AccelerationStructureSize,
     primitive_range: Range<usize>,
+    vertex_range: Range<usize>,
 }
 
 impl<T> Blas<T> {
@@ -37,6 +38,7 @@ impl<T> Blas<T> {
         let triangle_count = indices.count() as u64 / 3;
         let geometry_info = self.geometry_info.clone();
         let primitive_range = self.primitive_range.clone();
+        let vertex_range = self.vertex_range.clone();
 
         rgraph
             .begin_pass("Build BLAS")
@@ -50,7 +52,7 @@ impl<T> Blas<T> {
                     scratch_buf,
                     &geometry_info,
                     &[vk::AccelerationStructureBuildRangeInfoKHR {
-                        first_vertex: 0,
+                        first_vertex: vertex_range.start as _,
                         primitive_count: (primitive_range.end - primitive_range.start) as u32,
                         primitive_offset: primitive_range.start as u32,
                         transform_offset: 0,
@@ -64,6 +66,7 @@ impl<T> Blas<T> {
         indices: &Arc<TypedBuffer<u32>>,
         index_range: Range<usize>,
         positions: &Arc<TypedBuffer<T>>,
+        positions_range: Range<usize>,
     ) -> Self {
         //let triangle_count = geometry.indices.count() / 3;
         let triangle_count = (index_range.end - index_range.start) as u64 / 3;
@@ -113,6 +116,7 @@ impl<T> Blas<T> {
                 start: index_range.start / 3,
                 end: index_range.end / 3,
             },
+            vertex_range: positions_range.clone(),
         }
     }
 }
