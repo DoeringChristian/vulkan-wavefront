@@ -1,20 +1,22 @@
 use crate::buffer::TypedBuffer;
-use crate::dense_arena::Arena;
+use crate::dense_arena::{Arena, Key};
 use crate::types::uint64;
 use crevice::std140::AsStd140;
 use russimp::scene::PostProcess;
 use screen_13::prelude::*;
+use std::collections::HashMap;
 use std::path::Path;
 use std::sync::Arc;
 
 pub struct Instance {
     pub transform: glam::Mat4,
+    mesh: Key,
 }
 
 #[derive(AsStd140)]
 pub struct InstanceData {
     pub transform: glam::Mat4,
-    pub mesh: uint64,
+    pub mesh_idx: u32,
 }
 
 pub struct Mesh {
@@ -40,6 +42,7 @@ pub struct Scene {
     device: Arc<Device>,
 
     mesh_data: Option<TypedBuffer<MeshData>>,
+    instance_data: Option<TypedBuffer<InstanceData>>,
 }
 
 impl Scene {
@@ -57,14 +60,19 @@ impl Scene {
         todo!()
     }
     pub fn update(&mut self) {
+        let mut mesh_key2idx: HashMap<Key, usize> = HashMap::default();
         let data = self
             .meshes
-            .values()
-            .map(|mesh| MeshData {
-                indices: uint64(Buffer::device_address(&mesh.indices)),
-                positions: uint64(Buffer::device_address(&mesh.positions)),
-                normals: uint64(Buffer::device_address(&mesh.normals)),
-                tangents: uint64(Buffer::device_address(&mesh.tangents)),
+            .iter()
+            .enumerate()
+            .map(|(idx, (key, mesh))| {
+                mesh_key2idx.insert(*key, idx);
+                MeshData {
+                    indices: uint64(Buffer::device_address(&mesh.indices)),
+                    positions: uint64(Buffer::device_address(&mesh.positions)),
+                    normals: uint64(Buffer::device_address(&mesh.normals)),
+                    tangents: uint64(Buffer::device_address(&mesh.tangents)),
+                }
             })
             .collect::<Vec<_>>();
         let data = TypedBuffer::create_from_slice_std140(
@@ -73,5 +81,20 @@ impl Scene {
             &data,
         );
         self.mesh_data = Some(data);
+
+        let data = self
+            .instances
+            .values()
+            .map(|instance| InstanceData {
+                transform: instance.transform,
+                mesh_idx: mesh_key2idx[&instance.mesh] as u32,
+            })
+            .collect::<Vec<_>>();
+        let data = TypedBuffer::create_from_slice_std140(
+            &self.device,
+            vk::BufferUsageFlags::STORAGE_BUFFER,
+            &data,
+        );
+        self.instance_data = Some(data);
     }
 }
