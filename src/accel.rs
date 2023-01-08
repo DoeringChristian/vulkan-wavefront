@@ -12,6 +12,7 @@ pub struct Blas<T> {
     pub positions: Arc<TypedBuffer<T>>,
     geometry_info: AccelerationStructureGeometryInfo,
     size: AccelerationStructureSize,
+    primitive_range: Range<usize>,
 }
 
 impl<T> Blas<T> {
@@ -35,6 +36,7 @@ impl<T> Blas<T> {
 
         let triangle_count = indices.count() as u64 / 3;
         let geometry_info = self.geometry_info.clone();
+        let primitive_range = self.primitive_range.clone();
 
         rgraph
             .begin_pass("Build BLAS")
@@ -49,8 +51,8 @@ impl<T> Blas<T> {
                     &geometry_info,
                     &[vk::AccelerationStructureBuildRangeInfoKHR {
                         first_vertex: 0,
-                        primitive_count: triangle_count as u32,
-                        primitive_offset: 0,
+                        primitive_count: (primitive_range.end - primitive_range.start) as u32,
+                        primitive_offset: primitive_range.start as u32,
                         transform_offset: 0,
                     }],
                 )
@@ -107,6 +109,10 @@ impl<T> Blas<T> {
             positions: positions.clone(),
             geometry_info,
             size: accel_size,
+            primitive_range: Range {
+                start: index_range.start / 3,
+                end: index_range.end / 3,
+            },
         }
     }
 }
