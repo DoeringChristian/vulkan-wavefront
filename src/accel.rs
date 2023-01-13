@@ -52,9 +52,9 @@ impl<T> Blas<T> {
                     scratch_buf,
                     &geometry_info,
                     &[vk::AccelerationStructureBuildRangeInfoKHR {
-                        first_vertex: vertex_range.start as _,
+                        first_vertex: 0,
                         primitive_count: (primitive_range.end - primitive_range.start) as u32,
-                        primitive_offset: primitive_range.start as u32,
+                        primitive_offset: 0,
                         transform_offset: 0,
                     }],
                 )
@@ -83,13 +83,14 @@ impl<T> Blas<T> {
                 geometry: AccelerationStructureGeometryData::Triangles {
                     index_data: DeviceOrHostAddress::DeviceAddress(
                         screen_13::prelude::Buffer::device_address(&indices)
-                            + index_range.start as u64,
+                            + (index_range.start * std::mem::size_of::<u32>) as u64,
                     ),
                     index_type: vk::IndexType::UINT32,
                     transform_data: None,
                     max_vertex: vertex_count as _,
                     vertex_data: DeviceOrHostAddress::DeviceAddress(
-                        screen_13::prelude::Buffer::device_address(&positions),
+                        screen_13::prelude::Buffer::device_address(&positions)
+                            + (positions_range.start * std::mem::size_of::<T>()),
                     ),
                     vertex_format: vk::Format::R32G32B32_SFLOAT,
                     vertex_stride: vertex_stride,
