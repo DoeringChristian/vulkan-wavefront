@@ -38,7 +38,7 @@ struct Mesh {
 }
 
 #[derive(Debug, Clone, Copy, Zeroable, Pod)]
-#[repr(C)]
+#[repr(C, align(16))]
 struct MeshData {
     indices: Range,
     positions: Range,
@@ -51,7 +51,7 @@ struct Instance {
 }
 
 #[derive(Debug, Clone, Copy, Zeroable, Pod)]
-#[repr(C)]
+#[repr(C, align(16))]
 struct InstanceData {
     transform: [f32; 16],
     mesh_idx: usize,
@@ -168,7 +168,7 @@ impl Scene {
             instance_data: None,
         }
     }
-    pub fn upload(&mut self) {
+    pub fn update(&mut self) {
         for instance in self.instances.iter() {
             self.blases.push(Blas::create(
                 &self.device,

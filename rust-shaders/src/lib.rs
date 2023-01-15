@@ -24,3 +24,8 @@ pub fn main_cp(
 ) {
     o[idx.x as usize] = i[idx.x as usize] + 1.;
 }
+
+#[spirv(compute(threads(64)))]
+pub fn intersection() {
+    todo!()
+}

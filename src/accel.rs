@@ -83,14 +83,14 @@ impl<T> Blas<T> {
                 geometry: AccelerationStructureGeometryData::Triangles {
                     index_data: DeviceOrHostAddress::DeviceAddress(
                         screen_13::prelude::Buffer::device_address(&indices)
-                            + (index_range.start * std::mem::size_of::<u32>) as u64,
+                            + (index_range.start * std::mem::size_of::<u32>()) as u64,
                     ),
                     index_type: vk::IndexType::UINT32,
                     transform_data: None,
                     max_vertex: vertex_count as _,
                     vertex_data: DeviceOrHostAddress::DeviceAddress(
                         screen_13::prelude::Buffer::device_address(&positions)
-                            + (positions_range.start * std::mem::size_of::<T>()),
+                            + (positions_range.start * std::mem::size_of::<T>()) as u64,
                     ),
                     vertex_format: vk::Format::R32G32B32_SFLOAT,
                     vertex_stride: vertex_stride,
