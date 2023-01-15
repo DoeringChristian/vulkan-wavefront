@@ -38,7 +38,7 @@ struct Mesh {
 }
 
 #[derive(Debug, Clone, Copy, Zeroable, Pod)]
-#[repr(C, align(16))]
+#[repr(C)]
 struct MeshData {
     indices: Range,
     positions: Range,
@@ -51,7 +51,7 @@ struct Instance {
 }
 
 #[derive(Debug, Clone, Copy, Zeroable, Pod)]
-#[repr(C, align(16))]
+#[repr(C)]
 struct InstanceData {
     transform: [f32; 16],
     mesh_idx: usize,
