@@ -30,7 +30,7 @@ pub(crate) unsafe fn try_cast_slice<A: Copy, B: Copy>(a: &[A]) -> Option<&[B]> {
 #[derive(Debug)]
 pub struct TypedBuffer<T> {
     _ty: PhantomData<T>,
-    buf: Arc<screen_13::prelude::Buffer>,
+    pub buf: Arc<screen_13::prelude::Buffer>,
     device: Arc<Device>,
     count: usize,
     stride: usize,
@@ -135,6 +135,7 @@ impl<T: Copy> TypedBuffer<T> {
         }
     }
 }
+
 impl<T> TypedBuffer<T> {
     #[inline]
     pub fn count(&self) -> usize {

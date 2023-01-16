@@ -3,15 +3,8 @@
 //use bytemuck::{Pod, Zeroable};
 use spirv_std::glam;
 
-//pub unsafe fn convert_u_to_ptr<T>(handle: u64) -> *mut T {
-//    let result: *mut T;
-//    asm!(
-//        "{result} = OpConvertUToPtr typeof{result} {handle}",
-//        handle = in(reg) handle,
-//        result = out(reg) result,
-//    );
-//    result
-//}
+const DEFAULT_TMIN: f32 = 0.001;
+const DEFAULT_TMAX: f32 = 10000.0;
 
 #[derive(Copy, Clone)]
 #[repr(C)]
@@ -47,4 +40,23 @@ pub struct Ray {
     d: glam::Vec3,
     tmin: f32,
     tmax: f32,
+}
+
+impl Ray {
+    pub fn new(o: glam::Vec3, d: glam::Vec3) -> Self {
+        Self {
+            o,
+            d: d.normalize(),
+            tmin: DEFAULT_TMIN,
+            tmax: DEFAULT_TMAX,
+        }
+    }
+    pub fn new_t(o: glam::Vec3, d: glam::Vec3, tmin: f32, tmax: f32) -> Self {
+        Self {
+            o,
+            d: d.normalize(),
+            tmin,
+            tmax,
+        }
+    }
 }

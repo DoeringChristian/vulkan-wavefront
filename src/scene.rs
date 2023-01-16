@@ -72,7 +72,7 @@ impl Scene {
             ],
         )
         .unwrap();
-        println!("{:#?}", scene);
+        //println!("{:#?}", scene);
 
         let mut positions = vec![];
         let mut indices = vec![];
@@ -230,5 +230,14 @@ impl Scene {
             .as_ref()
             .unwrap()
             .build(cache, rgraph, &blas_nodes);
+    }
+
+    pub fn ray_intersect(
+        &mut self,
+        rays: TypedBuffer<Ray>,
+        cache: &mut HashPool,
+        rgraph: &mut RenderGraph,
+    ) -> TypedBuffer<HitInfo> {
+        todo!()
     }
 }

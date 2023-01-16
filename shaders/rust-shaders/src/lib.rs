@@ -54,7 +54,7 @@ pub struct Ray {
 }
 
 #[spirv(compute(threads(64)))]
-pub fn intersection(
+pub fn ray_intersect(
     #[spirv(global_invocation_id)] idx: glam::UVec3,
     #[spirv(storage_buffer, descriptor_set = 0, binding = 0)] indices: &[u32],
     #[spirv(storage_buffer, descriptor_set = 0, binding = 1)] positions: &[u32],
