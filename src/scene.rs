@@ -152,12 +152,16 @@ impl Scene {
             instances,
             positions: Arc::new(TypedBuffer::create_from_slice(
                 device,
-                vk::BufferUsageFlags::STORAGE_BUFFER | vk::BufferUsageFlags::SHADER_DEVICE_ADDRESS,
+                vk::BufferUsageFlags::STORAGE_BUFFER
+                    | vk::BufferUsageFlags::SHADER_DEVICE_ADDRESS
+                    | vk::BufferUsageFlags::ACCELERATION_STRUCTURE_BUILD_INPUT_READ_ONLY_KHR,
                 &positions,
             )),
             indices: Arc::new(TypedBuffer::create_from_slice(
                 device,
-                vk::BufferUsageFlags::STORAGE_BUFFER | vk::BufferUsageFlags::SHADER_DEVICE_ADDRESS,
+                vk::BufferUsageFlags::STORAGE_BUFFER
+                    | vk::BufferUsageFlags::SHADER_DEVICE_ADDRESS
+                    | vk::BufferUsageFlags::ACCELERATION_STRUCTURE_BUILD_INPUT_READ_ONLY_KHR,
                 &indices,
             )),
             device: device.clone(),
@@ -168,7 +172,7 @@ impl Scene {
             instance_data: None,
         }
     }
-    pub fn update(&mut self) {
+    pub fn update(&mut self, cache: &mut HashPool, rgraph: &mut RenderGraph) {
         for instance in self.instances.iter() {
             self.blases.push(Blas::create(
                 &self.device,
@@ -240,5 +244,18 @@ impl Scene {
             vk::BufferUsageFlags::STORAGE_BUFFER,
             &instance_data,
         )));
+
+        let blas_nodes = self
+            .blases
+            .iter()
+            .map(|blas| {
+                blas.build(cache, rgraph);
+                AnyAccelerationStructureNode::AccelerationStructure(rgraph.bind_node(&blas.accel))
+            })
+            .collect::<Vec<_>>();
+        self.tlas
+            .as_ref()
+            .unwrap()
+            .build(cache, rgraph, &blas_nodes);
     }
 }

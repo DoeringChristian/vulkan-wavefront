@@ -27,12 +27,14 @@ fn main() {
         .ray_tracing(true)
         .build()
         .unwrap();
-    let mut cache = LazyPool::new(&sc13.device);
+    let mut cache = HashPool::new(&sc13.device);
+    let mut rgraph = RenderGraph::new();
 
     let mut scene = Scene::load(&sc13.device, &Path::new("assets/scenes/default.fbx"));
-    scene.update();
+    scene.update(&mut cache, &mut rgraph);
 
     //println!("{:#?}", scene);
+    rgraph.resolve().submit(&mut cache, 0).unwrap();
 
     unsafe {
         sc13.device.device_wait_idle().unwrap();
