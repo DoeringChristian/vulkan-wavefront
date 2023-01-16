@@ -4,6 +4,7 @@
 //use bytemuck::{Pod, Zeroable};
 use rust_shader_common::*;
 use spirv_std::glam;
+use spirv_std::glam::Vec4Swizzles;
 use spirv_std::ray_tracing::{
     AccelerationStructure, CandidateIntersection, CommittedIntersection, RayFlags, RayQuery,
 };
@@ -30,9 +31,9 @@ pub fn ray_intersect(
             accel,
             RayFlags::OPAQUE,
             0xff,
-            glam::Vec3::from(ray.o),
+            ray.o(),
             ray.tmin,
-            glam::Vec3::from(ray.d),
+            ray.d(),
             ray.tmax,
         );
 
@@ -47,7 +48,7 @@ pub fn ray_intersect(
         if query.get_committed_intersection_type() == CommittedIntersection::Triangle {
             // ray hit triangle
             hit.t = query.get_committed_intersection_t();
-            hit.p = (glam::Vec3::from(ray.o) + glam::Vec3::from(ray.d) * hit.t).into();
+            hit.p = (ray.o() + ray.d() * hit.t).into();
             hit.instance_id = query.get_committed_intersection_instance_id();
             hit.geometry_index = query.get_committed_intersection_primitive_index();
             hit.valid = 1;

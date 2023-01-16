@@ -29,7 +29,7 @@ pub struct InstanceData {
 
 #[cfg_attr(not(target_arch = "spirv"), derive(Debug))]
 #[derive(Copy, Clone, Default)]
-#[repr(C)]
+#[repr(C, align(16))]
 pub struct HitInfo {
     pub p: [f32; 3],
     pub t: f32,
@@ -48,6 +48,12 @@ pub struct Ray {
 }
 
 impl Ray {
+    pub fn o(&self) -> glam::Vec3 {
+        self.o.into()
+    }
+    pub fn d(&self) -> glam::Vec3 {
+        self.d.into()
+    }
     pub fn new(o: glam::Vec3, d: glam::Vec3) -> Self {
         Self {
             o: o.into(),
