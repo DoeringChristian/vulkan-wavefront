@@ -27,19 +27,19 @@ pub struct InstanceData {
     pub mesh_idx: usize,
 }
 
-#[derive(Copy, Clone, Default)]
+#[derive(Copy, Clone, Default, Debug)]
 #[repr(C)]
 pub struct HitInfo {
-    t: f32,
+    pub t: f32,
 }
 
 #[derive(Copy, Clone)]
 #[repr(C)]
 pub struct Ray {
-    o: glam::Vec3,
-    d: glam::Vec3,
-    tmin: f32,
-    tmax: f32,
+    pub o: glam::Vec3,
+    pub d: glam::Vec3,
+    pub tmin: f32,
+    pub tmax: f32,
 }
 
 impl Ray {

@@ -25,6 +25,7 @@ mod scene;
 fn main() {
     pretty_env_logger::init();
     const SHADER: &[u8] = include_bytes!(env!("rust_shaders.spv"));
+    println!("{}", env!("rust_shaders.spv"));
     //let device = Arc::new(Device::new(config).unwrap());
     //let arr = Array::create(&device, &[1, 2, 3], BufferUsageFlags::STORAGE_BUFFER);
     let sc13 = EventLoop::new()
@@ -52,12 +53,11 @@ fn main() {
             &rays,
         )
     };
-    let hit_info = vec![HitInfo::default(); 1];
     let hit_info = unsafe {
-        TypedBuffer::unsafe_create_from_slice(
+        TypedBuffer::unsafe_create_mappable_from_slice(
             &sc13.device,
             vk::BufferUsageFlags::STORAGE_BUFFER,
-            &vec![HitInfo::default(); 1],
+            &vec![HitInfo { t: 2. }; 1],
         )
     };
 
@@ -69,4 +69,8 @@ fn main() {
     unsafe {
         sc13.device.device_wait_idle().unwrap();
     }
+
+    let hit_info: &[HitInfo] =
+        unsafe { buffer::try_cast_slice(Buffer::mapped_slice(&hit_info)).unwrap() };
+    println!("{:#?}", hit_info);
 }

@@ -1508,6 +1508,7 @@ dependencies = [
 name = "rust-shaders"
 version = "0.1.0"
 dependencies = [
+ "rust-shader-common",
  "spirv-builder",
  "spirv-std",
 ]

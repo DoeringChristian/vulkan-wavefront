@@ -113,12 +113,34 @@ impl<T: bytemuck::Pod> TypedBuffer<T> {
     }
 }
 impl<T: Copy> TypedBuffer<T> {
-    pub unsafe fn unsafe_create_from_slice(
+    pub unsafe fn unsafe_create_mappable_from_slice(
         device: &Arc<Device>,
         usage: vk::BufferUsageFlags,
         data: &[T],
     ) -> Self {
         let count = data.len();
+        let stride = size_of::<T>();
+        let mut buf = screen_13::prelude::Buffer::create(
+            device,
+            BufferInfo::new_mappable((count * stride) as _, usage),
+        )
+        .unwrap();
+        screen_13::prelude::Buffer::copy_from_slice(&mut buf, 0, unsafe {
+            try_cast_slice(data).unwrap()
+        });
+        Self {
+            buf: Arc::new(buf),
+            count: data.len(),
+            stride,
+            device: device.clone(),
+            _ty: PhantomData,
+        }
+    }
+    pub unsafe fn unsafe_create_from_slice(
+        device: &Arc<Device>,
+        usage: vk::BufferUsageFlags,
+        data: &[T],
+    ) -> Self {
         let stride = size_of::<T>();
         let buf = screen_13::prelude::Buffer::create_from_slice(
             device,
