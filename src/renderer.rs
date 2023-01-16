@@ -55,8 +55,8 @@ impl IntersectionRenderer {
             .read_descriptor((0, 2), mesh_data_node)
             .read_descriptor((0, 3), instance_data_node)
             .read_descriptor((0, 4), accel_node)
-            .read_descriptor((1, 0), ray_node)
-            .write_descriptor((1, 1), hit_info_node)
+            .read_descriptor((0, 5), ray_node)
+            .write_descriptor((0, 6), hit_info_node)
             .record_compute(move |compute, _| {
                 compute.dispatch(count as u32, 1, 1);
             })

@@ -27,17 +27,19 @@ pub struct InstanceData {
     pub mesh_idx: usize,
 }
 
-#[derive(Copy, Clone, Default, Debug)]
+#[cfg_attr(not(target_arch = "spirv"), derive(Debug))]
+#[derive(Copy, Clone, Default)]
 #[repr(C)]
 pub struct HitInfo {
     pub t: f32,
+    pub p: [f32; 3],
 }
 
 #[derive(Copy, Clone)]
 #[repr(C)]
 pub struct Ray {
-    pub o: glam::Vec3,
-    pub d: glam::Vec3,
+    pub o: [f32; 3],
+    pub d: [f32; 3],
     pub tmin: f32,
     pub tmax: f32,
 }
@@ -45,16 +47,16 @@ pub struct Ray {
 impl Ray {
     pub fn new(o: glam::Vec3, d: glam::Vec3) -> Self {
         Self {
-            o,
-            d: d.normalize(),
+            o: o.into(),
+            d: d.normalize().into(),
             tmin: DEFAULT_TMIN,
             tmax: DEFAULT_TMAX,
         }
     }
     pub fn new_t(o: glam::Vec3, d: glam::Vec3, tmin: f32, tmax: f32) -> Self {
         Self {
-            o,
-            d: d.normalize(),
+            o: o.into(),
+            d: d.normalize().into(),
             tmin,
             tmax,
         }

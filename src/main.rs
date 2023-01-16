@@ -35,42 +35,44 @@ fn main() {
         .unwrap();
 
     let intersection_renderer = IntersectionRenderer::create(&sc13.device);
-
     let mut cache = HashPool::new(&sc13.device);
-    let mut rgraph = RenderGraph::new();
 
-    let mut scene = Scene::load(&sc13.device, &Path::new("assets/scenes/default.fbx"));
-    scene.update(&mut cache, &mut rgraph);
+    sc13.run(|mut frame| {
+        //let mut rgraph = RenderGraph::new();
 
-    let rays = vec![Ray::new(
-        vec3(1., 1., 1.),
-        vec3(0., 0., 0.) - vec3(1., 1., 1.),
-    )];
-    let rays = unsafe {
-        TypedBuffer::unsafe_create_from_slice(
-            &sc13.device,
-            vk::BufferUsageFlags::STORAGE_BUFFER,
+        let mut scene = Scene::load(&frame.device, &Path::new("assets/scenes/default.fbx"));
+        scene.update(&mut cache, &mut frame.render_graph);
+
+        let rays = vec![Ray::new(
+            vec3(1., 1., 1.),
+            vec3(0., 0., 0.) - vec3(1., 1., 1.),
+        )];
+        let rays = unsafe {
+            TypedBuffer::unsafe_create_mappable_from_slice(
+                &frame.device,
+                vk::BufferUsageFlags::STORAGE_BUFFER,
+                &rays,
+            )
+        };
+        let hit_info = unsafe {
+            TypedBuffer::unsafe_create_mappable_from_slice(
+                &frame.device,
+                vk::BufferUsageFlags::STORAGE_BUFFER,
+                &vec![HitInfo { t: -1., p: [0.; 3] }; 1],
+            )
+        };
+
+        intersection_renderer.record(
+            &scene,
             &rays,
-        )
-    };
-    let hit_info = unsafe {
-        TypedBuffer::unsafe_create_mappable_from_slice(
-            &sc13.device,
-            vk::BufferUsageFlags::STORAGE_BUFFER,
-            &vec![HitInfo { t: 2. }; 1],
-        )
-    };
+            &hit_info,
+            &mut cache,
+            &mut frame.render_graph,
+        );
 
-    intersection_renderer.record(&scene, &rays, &hit_info, &mut cache, &mut rgraph);
-
-    //println!("{:#?}", scene);
-    rgraph.resolve().submit(&mut cache, 0).unwrap();
-
-    unsafe {
-        sc13.device.device_wait_idle().unwrap();
-    }
-
-    let hit_info: &[HitInfo] =
-        unsafe { buffer::try_cast_slice(Buffer::mapped_slice(&hit_info)).unwrap() };
-    println!("{:#?}", hit_info);
+        frame
+            .render_graph
+            .clear_color_image_value(frame.swapchain_image, [1., 1., 1., 1.]);
+    })
+    .unwrap();
 }

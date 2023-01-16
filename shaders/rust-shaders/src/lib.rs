@@ -15,28 +15,29 @@ pub fn ray_intersect(
     #[spirv(storage_buffer, descriptor_set = 0, binding = 2)] meshes: &[MeshData],
     #[spirv(storage_buffer, descriptor_set = 0, binding = 3)] instances: &[InstanceData],
     #[spirv(uniform_constant, descriptor_set = 0, binding = 4)] accel: &AccelerationStructure,
-    #[spirv(storage_buffer, descriptor_set = 1, binding = 0)] rays: &[Ray],
-    #[spirv(storage_buffer, descriptor_set = 1, binding = 1)] hit: &mut [HitInfo],
+    #[spirv(storage_buffer, descriptor_set = 0, binding = 5)] ray: &[Ray],
+    #[spirv(storage_buffer, descriptor_set = 0, binding = 6)] hit: &mut [HitInfo],
 ) {
-    let ray = &rays[idx.x as usize];
-    let hit = &mut hit[idx.x as usize];
-    *hit = HitInfo::default();
+    let i = idx.x as usize;
+    let hit = &mut hit[i];
+    let ray = &ray[i];
+
     unsafe {
         spirv_std::ray_query!(let mut query);
         query.initialize(
             accel,
             RayFlags::OPAQUE,
             0xff,
-            ray.o,
-            ray.tmin,
-            ray.d,
-            ray.tmax,
+            glam::Vec3::from([1., 1., 1.]),
+            0.001,
+            glam::Vec3::from([-1., -1., -1.]).normalize(),
+            10000.,
         );
         if query.proceed() {
+            hit.t = 1.;
             if query.get_candidate_intersection_type() == CandidateIntersection::Triangle {
                 hit.t = query.get_candidate_intersection_t();
             }
         }
     }
-    *hit = HitInfo { t: 1. };
 }
