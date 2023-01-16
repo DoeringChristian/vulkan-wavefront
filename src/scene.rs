@@ -9,7 +9,7 @@ use std::sync::Arc;
 
 #[derive(Debug, Clone, Copy, Zeroable, Pod)]
 #[repr(C)]
-struct Range {
+pub struct Range {
     pub start: usize,
     pub end: usize,
 }
@@ -32,43 +32,43 @@ impl From<Range> for std::ops::Range<usize> {
 }
 
 #[derive(Debug, Clone)]
-struct Mesh {
+pub struct Mesh {
     indices: std::ops::Range<usize>,
     positions: std::ops::Range<usize>,
 }
 
 #[derive(Debug, Clone, Copy, Zeroable, Pod)]
 #[repr(C)]
-struct MeshData {
+pub struct MeshData {
     indices: Range,
     positions: Range,
 }
 
 #[derive(Debug, Clone, Copy)]
-struct Instance {
+pub struct Instance {
     transform: glam::Mat4,
     mesh_idx: usize,
 }
 
 #[derive(Debug, Clone, Copy, Zeroable, Pod)]
 #[repr(C)]
-struct InstanceData {
+pub struct InstanceData {
     transform: [f32; 16],
     mesh_idx: usize,
 }
 
 pub struct Scene {
     device: Arc<Device>,
-    positions: Arc<TypedBuffer<glam::Vec3>>,
-    indices: Arc<TypedBuffer<u32>>,
-    meshes: Vec<Mesh>,
-    instances: Vec<Instance>,
+    pub positions: Arc<TypedBuffer<glam::Vec3>>,
+    pub indices: Arc<TypedBuffer<u32>>,
+    pub meshes: Vec<Mesh>,
+    pub instances: Vec<Instance>,
 
-    blases: Vec<Blas<glam::Vec3>>,
-    tlas: Option<Tlas>,
+    pub blases: Vec<Blas<glam::Vec3>>,
+    pub tlas: Option<Tlas>,
 
-    instance_data: Option<Arc<TypedBuffer<InstanceData>>>,
-    mesh_data: Option<Arc<TypedBuffer<MeshData>>>,
+    pub instance_data: Option<Arc<TypedBuffer<InstanceData>>>,
+    pub mesh_data: Option<Arc<TypedBuffer<MeshData>>>,
 }
 
 fn matrix4x4_to_mat4(src: &Matrix4x4) -> glam::Mat4 {
