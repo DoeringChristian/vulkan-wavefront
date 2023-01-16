@@ -136,6 +136,7 @@ impl Scene {
         }
     }
     pub fn update(&mut self, cache: &mut HashPool, rgraph: &mut RenderGraph) {
+        // Create blases
         for instance in self.instances.iter() {
             self.blases.push(Blas::create(
                 &self.device,
@@ -145,6 +146,7 @@ impl Scene {
                 self.meshes[instance.mesh_idx].positions.clone().into(),
             ))
         }
+        // Transform instances into AccelerationStructureInstanceKHR types
         let instances = self
             .instances
             .iter()
@@ -177,8 +179,10 @@ impl Scene {
             })
             .collect::<Vec<_>>();
 
+        // Create tlas from instances
         self.tlas = Tlas::create(&self.device, &instances);
 
+        // Turn meshs and instances into mesh_data and instance_data
         let mesh_data = self
             .meshes
             .iter()
@@ -197,6 +201,7 @@ impl Scene {
             })
             .collect::<Vec<_>>();
 
+        // Upload mesh and instance data
         self.mesh_data = Some(Arc::new(unsafe {
             TypedBuffer::unsafe_create_from_slice(
                 &self.device,
@@ -212,6 +217,7 @@ impl Scene {
             )
         }));
 
+        // Build blas and tlas
         let blas_nodes = self
             .blases
             .iter()
