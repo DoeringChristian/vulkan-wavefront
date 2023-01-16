@@ -33,6 +33,8 @@ pub struct InstanceData {
 pub struct HitInfo {
     pub t: f32,
     pub p: [f32; 3],
+    pub instance_id: u32,
+    pub geometry_index: u32,
 }
 
 #[derive(Copy, Clone)]

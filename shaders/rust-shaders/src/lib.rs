@@ -4,7 +4,9 @@
 //use bytemuck::{Pod, Zeroable};
 use rust_shader_common::*;
 use spirv_std::glam;
-use spirv_std::ray_tracing::{AccelerationStructure, CandidateIntersection, RayFlags, RayQuery};
+use spirv_std::ray_tracing::{
+    AccelerationStructure, CandidateIntersection, CommittedIntersection, RayFlags, RayQuery,
+};
 use spirv_std::spirv;
 
 #[spirv(compute(threads(64)))]
@@ -28,16 +30,28 @@ pub fn ray_intersect(
             accel,
             RayFlags::OPAQUE,
             0xff,
-            glam::Vec3::from([1., 1., 1.]),
-            0.001,
-            glam::Vec3::from([-1., -1., -1.]).normalize(),
-            10000.,
+            glam::Vec3::from(ray.o),
+            ray.tmin,
+            glam::Vec3::from(ray.d),
+            ray.tmax,
         );
-        if query.proceed() {
-            hit.t = 1.;
+
+        while query.proceed() {
             if query.get_candidate_intersection_type() == CandidateIntersection::Triangle {
-                hit.t = query.get_candidate_intersection_t();
+                query.confirm_intersection();
+            } else if query.get_candidate_intersection_type() == CandidateIntersection::AABB {
+                query.confirm_intersection();
             }
+        }
+
+        if query.get_committed_intersection_type() == CommittedIntersection::Triangle {
+            // ray hit triangle
+            hit.t = query.get_committed_intersection_t();
+            hit.p = (glam::Vec3::from(ray.o) + glam::Vec3::from(ray.d) * hit.t).into();
+            hit.instance_id = query.get_committed_intersection_instance_id();
+            hit.geometry_index = query.get_committed_intersection_primitive_index();
+        } else {
+            // ray hit sky
         }
     }
 }
