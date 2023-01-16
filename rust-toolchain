@@ -5,7 +5,7 @@
 # to the user in the error, instead of "error: invalid channel name '[toolchain]'".
 
 [toolchain]
-channel = "nightly-2022-10-29"
+channel = "nightly-2022-12-18"
 components = ["rust-src", "rustc-dev", "llvm-tools-preview"]
 # commit_hash = 9565dfeb4e6225177bbe78f18cd48a7982f34401
 
