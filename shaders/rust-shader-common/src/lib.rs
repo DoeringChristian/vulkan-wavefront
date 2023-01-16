@@ -23,15 +23,15 @@ pub struct Range {
 #[derive(Copy, Clone)]
 #[repr(C)]
 pub struct MeshData {
-    indices: Range,
-    positions: Range,
+    pub indices: (u32, u32),
+    pub positions: (u32, u32),
 }
 
 #[derive(Copy, Clone)]
 #[repr(C)]
 pub struct InstanceData {
-    transform: [f32; 16],
-    mesh_idx: usize,
+    pub transform: glam::Mat4,
+    pub mesh_idx: usize,
 }
 
 #[derive(Copy, Clone, Default)]

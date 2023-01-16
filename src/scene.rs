@@ -3,33 +3,10 @@ use crate::buffer::TypedBuffer;
 use bytemuck::{Pod, Zeroable};
 use russimp::scene::PostProcess;
 use russimp::Matrix4x4;
+use rust_shader_common::*;
 use screen_13::prelude::*;
 use std::path::Path;
 use std::sync::Arc;
-
-#[derive(Debug, Clone, Copy, Zeroable, Pod)]
-#[repr(C)]
-pub struct Range {
-    pub start: usize,
-    pub end: usize,
-}
-
-impl From<std::ops::Range<usize>> for Range {
-    fn from(value: std::ops::Range<usize>) -> Self {
-        Self {
-            start: value.start,
-            end: value.end,
-        }
-    }
-}
-impl From<Range> for std::ops::Range<usize> {
-    fn from(value: Range) -> Self {
-        Self {
-            start: value.start,
-            end: value.end,
-        }
-    }
-}
 
 #[derive(Debug, Clone)]
 pub struct Mesh {
@@ -37,23 +14,9 @@ pub struct Mesh {
     positions: std::ops::Range<usize>,
 }
 
-#[derive(Debug, Clone, Copy, Zeroable, Pod)]
-#[repr(C)]
-pub struct MeshData {
-    indices: Range,
-    positions: Range,
-}
-
 #[derive(Debug, Clone, Copy)]
 pub struct Instance {
     transform: glam::Mat4,
-    mesh_idx: usize,
-}
-
-#[derive(Debug, Clone, Copy, Zeroable, Pod)]
-#[repr(C)]
-pub struct InstanceData {
-    transform: [f32; 16],
     mesh_idx: usize,
 }
 
@@ -220,8 +183,8 @@ impl Scene {
             .meshes
             .iter()
             .map(|mesh| MeshData {
-                indices: mesh.indices.clone().into(),
-                positions: mesh.positions.clone().into(),
+                indices: (mesh.indices.start as _, mesh.indices.end as _),
+                positions: (mesh.positions.start as _, mesh.positions.end as _),
             })
             .collect::<Vec<_>>();
 
@@ -229,21 +192,25 @@ impl Scene {
             .instances
             .iter()
             .map(|instance| InstanceData {
-                transform: instance.transform.to_cols_array(),
+                transform: instance.transform,
                 mesh_idx: instance.mesh_idx,
             })
             .collect::<Vec<_>>();
 
-        self.mesh_data = Some(Arc::new(TypedBuffer::create_from_slice(
-            &self.device,
-            vk::BufferUsageFlags::STORAGE_BUFFER,
-            &mesh_data,
-        )));
-        self.instance_data = Some(Arc::new(TypedBuffer::create_from_slice(
-            &self.device,
-            vk::BufferUsageFlags::STORAGE_BUFFER,
-            &instance_data,
-        )));
+        self.mesh_data = Some(Arc::new(unsafe {
+            TypedBuffer::unsafe_create_from_slice(
+                &self.device,
+                vk::BufferUsageFlags::STORAGE_BUFFER,
+                &mesh_data,
+            )
+        }));
+        self.instance_data = Some(Arc::new(unsafe {
+            TypedBuffer::unsafe_create_from_slice(
+                &self.device,
+                vk::BufferUsageFlags::STORAGE_BUFFER,
+                &instance_data,
+            )
+        }));
 
         let blas_nodes = self
             .blases
