@@ -50,8 +50,11 @@ pub fn ray_intersect(
             hit.p = (glam::Vec3::from(ray.o) + glam::Vec3::from(ray.d) * hit.t).into();
             hit.instance_id = query.get_committed_intersection_instance_id();
             hit.geometry_index = query.get_committed_intersection_primitive_index();
+            hit.valid = 1;
         } else {
             // ray hit sky
+            hit.valid = 0;
+            hit.t = ray.tmax;
         }
     }
 }
