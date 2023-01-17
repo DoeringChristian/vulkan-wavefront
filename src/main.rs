@@ -20,6 +20,7 @@ mod buffer;
 //mod sbt;
 mod renderer;
 mod scene;
+mod util;
 //mod types;
 
 fn main() {
@@ -71,6 +72,6 @@ fn single() {
     }
 
     let hit_info: &[HitInfo] =
-        unsafe { buffer::try_cast_slice(Buffer::mapped_slice(&hit_info)).unwrap() };
+        unsafe { util::try_cast_slice(Buffer::mapped_slice(&hit_info)).unwrap() };
     println!("{:#?}", hit_info);
 }

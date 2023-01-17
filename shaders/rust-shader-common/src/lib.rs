@@ -41,6 +41,13 @@ pub struct HitInfo {
 
 #[derive(Copy, Clone)]
 #[repr(C, align(16))]
+pub struct Camera {
+    pub to_world: glam::Mat4,
+    pub to_view: glam::Mat4,
+}
+
+#[derive(Copy, Clone)]
+#[repr(C, align(16))]
 pub struct Ray {
     pub o: glam::Vec4,
     pub d: glam::Vec4,

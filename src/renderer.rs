@@ -1,3 +1,4 @@
+use crate::util;
 use rust_shader_common::*;
 use screen_13::prelude::*;
 use std::sync::Arc;
@@ -58,6 +59,51 @@ impl IntersectionRenderer {
             .read_descriptor((0, 5), ray_node)
             .write_descriptor((0, 6), hit_info_node)
             .record_compute(move |compute, _| {
+                compute.dispatch(count as u32, 1, 1);
+            })
+            .submit_pass();
+    }
+}
+
+pub struct RayGenRenderer {
+    ppl: Arc<ComputePipeline>,
+    device: Arc<Device>,
+}
+impl RayGenRenderer {
+    pub fn create(device: &Arc<Device>) -> Self {
+        let ppl = Arc::new(
+            ComputePipeline::create(
+                &device,
+                ComputePipelineInfo::default(),
+                Shader::new_compute(SHADER).entry_name("ray_gen".into()),
+            )
+            .unwrap(),
+        );
+
+        Self {
+            ppl,
+            device: device.clone(),
+        }
+    }
+
+    pub fn record(
+        &self,
+        scene: &Scene,
+        rays: &TypedBuffer<Ray>,
+        camera: Camera,
+        cache: &mut HashPool,
+        rgraph: &mut RenderGraph,
+    ) {
+        let count = rays.count();
+
+        let ray_node = rgraph.bind_node(&rays.buf);
+
+        rgraph
+            .begin_pass("IntersectionRenderPass")
+            .bind_pipeline(&self.ppl)
+            .write_descriptor((0, 0), ray_node)
+            .record_compute(move |compute, _| {
+                compute.push_constants(unsafe { util::cast_slice(&[camera]) });
                 compute.dispatch(count as u32, 1, 1);
             })
             .submit_pass();

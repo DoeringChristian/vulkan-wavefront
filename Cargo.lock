@@ -1500,6 +1500,7 @@ dependencies = [
 name = "rust-shader-common"
 version = "0.1.0"
 dependencies = [
+ "bytemuck",
  "spirv-builder",
  "spirv-std",
 ]

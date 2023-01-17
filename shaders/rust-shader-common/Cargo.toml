@@ -8,6 +8,7 @@ edition = "2021"
 [dependencies]
 #spirv-std = { git = "https://github.com/DoeringChristian/rust-gpu", branch = "u_to_ptr", features = ["glam"] }
 spirv-std = { git = "https://github.com/EmbarkStudios/rust-gpu", features = ["glam"]}
+bytemuck = {version = "1.12.3", features = ["derive"]}
 
 [build-dependencies]
 spirv-builder = { git = "https://github.com/EmbarkStudios/rust-gpu" }
