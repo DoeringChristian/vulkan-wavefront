@@ -10,6 +10,7 @@ mod pcg;
 mod rand;
 mod ray;
 mod sampler;
+mod warp;
 
 pub use camera::Camera;
 pub use path::PathCtx;
