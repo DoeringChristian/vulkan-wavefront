@@ -26,6 +26,7 @@ pub struct Scene {
     pub indices: Arc<TypedBuffer<u32>>,
     pub meshes: Vec<Mesh>,
     pub instances: Vec<Instance>,
+    pub cameras: Vec<Camera>,
 
     pub blases: Vec<Blas<glam::Vec3>>,
     pub tlas: Option<Tlas>,
@@ -41,11 +42,7 @@ fn matrix4x4_to_mat4(src: &Matrix4x4) -> glam::Mat4 {
     ])
 }
 
-fn load_instances(
-    instances: &mut Vec<Instance>,
-    node: &russimp::node::Node,
-    transform: glam::Mat4,
-) {
+fn load_nodes(instances: &mut Vec<Instance>, node: &russimp::node::Node, transform: glam::Mat4) {
     let transform = transform * matrix4x4_to_mat4(&node.transformation);
 
     for mesh in node.meshes.iter() {
@@ -56,7 +53,7 @@ fn load_instances(
     }
 
     for child in node.children.iter() {
-        load_instances(instances, &child.borrow(), transform);
+        load_nodes(instances, &child.borrow(), transform);
     }
 }
 
@@ -105,11 +102,34 @@ impl Scene {
         }
         let mut instances = vec![];
 
-        load_instances(
+        load_nodes(
             &mut instances,
             &scene.root.as_ref().unwrap().borrow(),
             glam::Mat4::IDENTITY,
         );
+
+        let cameras = scene
+            .cameras
+            .iter()
+            .map(|camera| {
+                let to_world = glam::Mat4::look_at_rh(
+                    glam::vec3(camera.position.x, camera.position.y, camera.position.z),
+                    glam::vec3(camera.look_at.x, camera.look_at.y, camera.look_at.z),
+                    glam::vec3(camera.up.x, camera.up.y, camera.up.z),
+                );
+                let fov_x = camera.horizontal_fov;
+                let aspect = camera.aspect;
+                let fov_y = ((fov_x / 2.).atan() / aspect).tan() * 2.;
+                Camera::perspective(
+                    to_world,
+                    fov_y,
+                    aspect,
+                    camera.clip_plane_near,
+                    camera.clip_plane_far,
+                )
+            })
+            .collect::<Vec<_>>();
+
         Self {
             meshes,
             instances,
@@ -127,6 +147,8 @@ impl Scene {
                     | vk::BufferUsageFlags::ACCELERATION_STRUCTURE_BUILD_INPUT_READ_ONLY_KHR,
                 &indices,
             )),
+            cameras,
+
             device: device.clone(),
 
             blases: vec![],

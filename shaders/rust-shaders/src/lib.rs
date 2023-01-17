@@ -20,8 +20,10 @@ pub fn ray_gen(
     let camera = push_constant.camera;
     let spp = push_constant.spp;
     let seed = push_constant.seed;
+    let width = push_constant.width;
+    let height = push_constant.height;
 
-    let idx: usize = gidx.y as usize * camera.size.x as usize * spp as usize
+    let idx: usize = gidx.y as usize * width as usize * spp as usize
         + gidx.x as usize * spp as usize
         + gidx.z as usize;
 
@@ -33,7 +35,7 @@ pub fn ray_gen(
     let sample = sampler.next_2d();
     let pos = glam::vec2(gidx.x as f32, gidx.x as f32); // TODO: maybe use idx to calculate pos
     let adjusted_pos = pos + sample;
-    let uv_pos = adjusted_pos / camera.size.as_vec2();
+    let uv_pos = adjusted_pos / glam::vec2(width as _, height as _);
 
     let view_to_camera = camera.to_view.inverse();
 

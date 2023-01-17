@@ -62,9 +62,11 @@ fn main() {
     raygen_renderer.record(
         &ray,
         &sampler,
-        Camera::perspective(glam::Mat4::IDENTITY, PI / 2., 1., 0.001, 10000., 1920, 1080),
+        scene.cameras[0],
         0,
         1,
+        1920,
+        1080,
         &mut cache,
         &mut rgraph,
     );

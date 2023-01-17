@@ -56,4 +56,6 @@ pub struct RgenPushConstant {
     pub camera: Camera,
     pub seed: u32,
     pub spp: u32,
+    pub width: u32,
+    pub height: u32,
 }

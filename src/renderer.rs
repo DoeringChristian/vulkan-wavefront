@@ -93,16 +93,25 @@ impl RayGenRenderer {
         camera: Camera,
         seed: u32,
         spp: u32,
+        width: u32,
+        height: u32,
         //spp: u32,
         cache: &mut HashPool,
         rgraph: &mut RenderGraph,
     ) {
         let count = rays.count();
-        assert!((camera.size.x * camera.size.y) as usize == count);
+        assert!(count == sampler.count());
+        assert!((width * height * spp) as usize == count);
 
         let ray_node = rgraph.bind_node(&rays.buf);
         let sampler_node = rgraph.bind_node(&sampler.buf);
-        let push_constant = RgenPushConstant { camera, seed, spp };
+        let push_constant = RgenPushConstant {
+            camera,
+            seed,
+            spp,
+            width,
+            height,
+        };
 
         rgraph
             .begin_pass("IntersectionRenderPass")
@@ -111,7 +120,7 @@ impl RayGenRenderer {
             .write_descriptor((0, 1), sampler_node)
             .record_compute(move |compute, _| {
                 compute.push_constants(unsafe { util::cast_slice(&[push_constant]) });
-                compute.dispatch(camera.size.x, camera.size.y, spp);
+                compute.dispatch(width, height, spp);
             })
             .submit_pass();
     }
