@@ -48,7 +48,7 @@ pub fn ray_intersect(
         if query.get_committed_intersection_type() == CommittedIntersection::Triangle {
             // ray hit triangle
             hit.t = query.get_committed_intersection_t();
-            hit.p = (ray.o() + ray.d() * hit.t).into();
+            hit.p = ray.o + ray.d * hit.t;
             hit.instance_id = query.get_committed_intersection_instance_id();
             hit.geometry_index = query.get_committed_intersection_primitive_index();
             hit.valid = 1;

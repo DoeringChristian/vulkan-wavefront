@@ -45,7 +45,7 @@ fn single() {
     let mut scene = Scene::load(&sc13.device, &Path::new("assets/scenes/default.fbx"));
     scene.update(&mut cache, &mut rgraph);
 
-    let rays = vec![Ray::new(vec3(200., 0., 0.), vec3(-1., 0., 0.))];
+    let rays = vec![Ray::new(vec3(0., 0., 0.), vec3(-1., 0., 0.))];
     let rays = unsafe {
         TypedBuffer::unsafe_create_from_slice(
             &sc13.device,

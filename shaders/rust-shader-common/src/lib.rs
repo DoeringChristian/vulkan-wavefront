@@ -2,6 +2,7 @@
 
 //use bytemuck::{Pod, Zeroable};
 use spirv_std::glam;
+use spirv_std::glam::Vec4Swizzles;
 
 const DEFAULT_TMIN: f32 = 0.001;
 const DEFAULT_TMAX: f32 = 10000.0;
@@ -31,7 +32,7 @@ pub struct InstanceData {
 #[derive(Copy, Clone, Default)]
 #[repr(C, align(16))]
 pub struct HitInfo {
-    pub p: [f32; 3],
+    pub p: glam::Vec4,
     pub t: f32,
     pub instance_id: u32,
     pub geometry_index: u32,
@@ -39,33 +40,35 @@ pub struct HitInfo {
 }
 
 #[derive(Copy, Clone)]
-#[repr(C)]
+#[repr(C, align(16))]
 pub struct Ray {
-    pub o: [f32; 3],
-    pub d: [f32; 3],
+    pub o: glam::Vec4,
+    pub d: glam::Vec4,
     pub tmin: f32,
     pub tmax: f32,
 }
 
 impl Ray {
     pub fn o(&self) -> glam::Vec3 {
-        self.o.into()
+        self.o.xyx()
     }
     pub fn d(&self) -> glam::Vec3 {
-        self.d.into()
+        self.d.xyz()
     }
     pub fn new(o: glam::Vec3, d: glam::Vec3) -> Self {
+        let d = d.normalize();
         Self {
-            o: o.into(),
-            d: d.normalize().into(),
+            o: [o.x, o.y, o.z, 0.].into(),
+            d: [d.x, d.y, d.z, 0.].into(),
             tmin: DEFAULT_TMIN,
             tmax: DEFAULT_TMAX,
         }
     }
     pub fn new_t(o: glam::Vec3, d: glam::Vec3, tmin: f32, tmax: f32) -> Self {
+        let d = d.normalize();
         Self {
-            o: o.into(),
-            d: d.normalize().into(),
+            o: [o.x, o.y, o.z, 0.].into(),
+            d: [d.x, d.y, d.z, 0.].into(),
             tmin,
             tmax,
         }
