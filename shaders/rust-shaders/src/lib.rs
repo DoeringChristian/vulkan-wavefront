@@ -41,10 +41,16 @@ pub fn ray_gen(
     let near_p = near_p.xyz();
 
     let o = camera.to_world.z_axis.xyz();
-    let d = camera.to_world * near_p.normalize().extend(0.);
+    let d = near_p.normalize();
 
     ray.o = o.extend(0.);
-    ray.d = d;
+    ray.d = camera.to_world * near_p.normalize().extend(0.);
+
+    let near_t = camera.near_clip / -d.z;
+    let far_t = camera.far_clip / -d.z;
+
+    ray.tmin = near_t;
+    ray.tmax = far_t - near_t;
 }
 
 #[spirv(compute(threads(64)))]
