@@ -10,6 +10,7 @@ pub const INIT_INC: u64 = 0xda3e_39cb_94b9_5bdb;
 /// alter the random number generator's state
 pub const INCREMENTOR: u64 = 6_364_136_223_846_793_005;
 
+#[derive(Clone, Copy)]
 pub struct PCG {
     state: u64,
     inc: u64,
@@ -34,6 +35,13 @@ impl PCG {
 
     pub fn next_u32(&mut self) -> u32 {
         self.next_u64() as u32
+    }
+
+    pub fn next_f32(&mut self) -> f32 {
+        // let sample = self.next_u32();
+        // let sample = sample.wrapping_shr(9) | 0x3f800000u32;
+        // unsafe { *(&sample as *const u32 as *const f32) }
+        (self.next_u32() & 0xffffff) as f32 / 16777216.0
     }
 }
 

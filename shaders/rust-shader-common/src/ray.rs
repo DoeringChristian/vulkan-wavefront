@@ -24,8 +24,8 @@ impl Ray {
     pub fn new(o: glam::Vec3, d: glam::Vec3) -> Self {
         let d = d.normalize();
         Self {
-            o: [o.x, o.y, o.z, 0.].into(),
-            d: [d.x, d.y, d.z, 0.].into(),
+            o: o.extend(0.),
+            d: d.extend(0.),
             tmin: DEFAULT_TMIN,
             tmax: DEFAULT_TMAX,
         }
@@ -33,8 +33,8 @@ impl Ray {
     pub fn new_t(o: glam::Vec3, d: glam::Vec3, tmin: f32, tmax: f32) -> Self {
         let d = d.normalize();
         Self {
-            o: [o.x, o.y, o.z, 0.].into(),
-            d: [d.x, d.y, d.z, 0.].into(),
+            o: o.extend(0.),
+            d: d.extend(0.),
             tmin,
             tmax,
         }

@@ -12,13 +12,38 @@ use spirv_std::spirv;
 
 #[spirv(compute(threads(64)))]
 pub fn ray_gen(
-    #[spirv(global_invocation_id)] idx: glam::UVec3,
-    #[spirv(push_constant)] camera: &Camera,
+    #[spirv(global_invocation_id)] gidx: glam::UVec3,
+    #[spirv(push_constant)] push_constant: &RgenPushConstant,
     #[spirv(storage_buffer, descriptor_set = 0, binding = 0)] ray: &mut [Ray],
-    //#[spirv(storage_buffer, descriptor_set = 0, binding = 1)] sampler: &mut [PCG],
+    #[spirv(storage_buffer, descriptor_set = 0, binding = 1)] sampler: &mut [IndependentSampler],
 ) {
-    let ray = &mut ray[(idx.y * camera.size.x + idx.x) as usize];
-    todo!()
+    let camera = push_constant.camera;
+    let spp = push_constant.spp;
+    let seed = push_constant.seed;
+
+    let idx: usize = gidx.y as usize * camera.size.x as usize * spp as usize
+        + gidx.x as usize * spp as usize
+        + gidx.z as usize;
+
+    let ray = &mut ray[idx];
+    let sampler = &mut sampler[idx];
+
+    sampler.seed(seed, idx as _);
+
+    let sample = sampler.next_2d();
+    let pos = glam::vec2(gidx.x as f32, gidx.x as f32); // TODO: maybe use idx to calculate pos
+    let adjusted_pos = pos + sample;
+    let uv_pos = adjusted_pos / camera.size.as_vec2();
+
+    let view_to_camera = camera.to_view.inverse();
+
+    let near_p = view_to_camera * glam::vec4(uv_pos.x, uv_pos.y, 0., 1.);
+    let near_p = near_p.xyz();
+
+    let o = camera.to_world.z_axis.xyz();
+    let d = camera.to_world * near_p.normalize().extend(0.);
+
+    *ray = Ray::new(o, d.xyz());
 }
 
 #[spirv(compute(threads(64)))]

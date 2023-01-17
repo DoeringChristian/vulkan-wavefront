@@ -58,6 +58,7 @@ fn main() {
             to_view: glam::Mat4::perspective_rh(PI / 2., 1., 0.001, 10000.),
             size: uvec2(1920, 1080),
         },
+        0,
         &mut cache,
         &mut rgraph,
     );

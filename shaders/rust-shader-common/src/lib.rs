@@ -5,10 +5,14 @@ use spirv_std::glam;
 use spirv_std::glam::Vec4Swizzles;
 
 mod pcg;
+mod rand;
 mod ray;
+mod sampler;
 
-pub use pcg::*;
-pub use ray::*;
+pub use pcg::PCG;
+pub use rand::sample_tea_32;
+pub use ray::Ray;
+pub use sampler::IndependentSampler;
 
 #[derive(Copy, Clone)]
 #[repr(C)]
@@ -48,4 +52,12 @@ pub struct Camera {
     pub to_world: glam::Mat4,
     pub to_view: glam::Mat4,
     pub size: glam::UVec2,
+}
+
+#[derive(Copy, Clone)]
+#[repr(C, align(16))]
+pub struct RgenPushConstant {
+    pub camera: Camera,
+    pub seed: u32,
+    pub spp: u32,
 }
