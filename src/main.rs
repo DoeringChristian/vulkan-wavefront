@@ -44,21 +44,27 @@ fn main() {
     let mut scene = Scene::load(&sc13.device, &Path::new("assets/scenes/default.fbx"));
     scene.update(&mut cache, &mut rgraph);
 
-    let rays = unsafe {
+    let ray = unsafe {
         TypedBuffer::unsafe_create_from_slice(
             &sc13.device,
             vk::BufferUsageFlags::STORAGE_BUFFER,
             &vec![Ray::default(); 1920 * 1080],
         )
     };
+
+    let sampler = unsafe {
+        TypedBuffer::unsafe_create_from_slice(
+            &sc13.device,
+            vk::BufferUsageFlags::STORAGE_BUFFER,
+            &vec![IndependentSampler::default(); 1920 * 1080],
+        )
+    };
     raygen_renderer.record(
-        &rays,
-        Camera {
-            to_world: glam::Mat4::IDENTITY,
-            to_view: glam::Mat4::perspective_rh(PI / 2., 1., 0.001, 10000.),
-            size: uvec2(1920, 1080),
-        },
+        &ray,
+        &sampler,
+        Camera::perspective(glam::Mat4::IDENTITY, PI / 2., 1., 0.001, 10000., 1920, 1080),
         0,
+        1,
         &mut cache,
         &mut rgraph,
     );
@@ -88,6 +94,6 @@ fn main() {
         sc13.device.device_wait_idle().unwrap();
     }
 
-    let rays: &[Ray] = unsafe { util::try_cast_slice(Buffer::mapped_slice(&rays)).unwrap() };
+    let rays: &[Ray] = unsafe { util::try_cast_slice(Buffer::mapped_slice(&ray)).unwrap() };
     println!("{:#?}", rays);
 }

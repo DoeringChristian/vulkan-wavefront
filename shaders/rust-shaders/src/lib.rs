@@ -43,7 +43,8 @@ pub fn ray_gen(
     let o = camera.to_world.z_axis.xyz();
     let d = camera.to_world * near_p.normalize().extend(0.);
 
-    *ray = Ray::new(o, d.xyz());
+    ray.o = o.extend(0.);
+    ray.d = d;
 }
 
 #[spirv(compute(threads(64)))]

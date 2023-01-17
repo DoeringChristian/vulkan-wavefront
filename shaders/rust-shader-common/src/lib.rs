@@ -4,11 +4,13 @@
 use spirv_std::glam;
 use spirv_std::glam::Vec4Swizzles;
 
+mod camera;
 mod pcg;
 mod rand;
 mod ray;
 mod sampler;
 
+pub use camera::Camera;
 pub use pcg::PCG;
 pub use rand::sample_tea_32;
 pub use ray::Ray;
@@ -44,14 +46,6 @@ pub struct HitInfo {
     pub instance_id: u32,
     pub geometry_index: u32,
     pub valid: u32,
-}
-
-#[derive(Copy, Clone)]
-#[repr(C, align(16))]
-pub struct Camera {
-    pub to_world: glam::Mat4,
-    pub to_view: glam::Mat4,
-    pub size: glam::UVec2,
 }
 
 #[derive(Copy, Clone)]
