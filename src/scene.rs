@@ -5,7 +5,10 @@ use russimp::scene::PostProcess;
 use russimp::Matrix4x4;
 use rust_shader_common::*;
 use screen_13::prelude::*;
+use std::cell::RefCell;
+use std::collections::HashMap;
 use std::path::Path;
+use std::rc::Rc;
 use std::sync::Arc;
 
 #[derive(Debug, Clone)]
@@ -37,23 +40,41 @@ pub struct Scene {
 
 fn matrix4x4_to_mat4(src: &Matrix4x4) -> glam::Mat4 {
     glam::Mat4::from_cols_array(&[
-        src.a1, src.a2, src.a3, src.a4, src.b1, src.b2, src.b3, src.b4, src.c1, src.c2, src.c3,
-        src.c4, src.d1, src.d2, src.d3, src.d4,
+        src.a1, src.b1, src.c1, src.d1, src.a2, src.b2, src.c2, src.d2, src.a3, src.b3, src.c3,
+        src.d3, src.a4, src.b4, src.c4, src.d4,
     ])
 }
 
-fn load_nodes(instances: &mut Vec<Instance>, node: &russimp::node::Node, transform: glam::Mat4) {
-    let transform = transform * matrix4x4_to_mat4(&node.transformation);
+pub struct Node {
+    pub node: Rc<RefCell<russimp::node::Node>>,
+    pub transform: glam::Mat4,
+}
 
-    for mesh in node.meshes.iter() {
+fn load_nodes(
+    instances: &mut Vec<Instance>,
+    nodes: &mut HashMap<String, Node>,
+    node: &Rc<RefCell<russimp::node::Node>>,
+    transform: glam::Mat4,
+) {
+    let transform = transform * matrix4x4_to_mat4(&node.borrow().transformation);
+
+    nodes.insert(
+        node.borrow().name.clone(),
+        Node {
+            node: node.clone(),
+            transform,
+        },
+    );
+
+    for mesh in node.borrow().meshes.iter() {
         instances.push(Instance {
             transform,
             mesh_idx: *mesh as _,
         })
     }
 
-    for child in node.children.iter() {
-        load_nodes(instances, &child.borrow(), transform);
+    for child in node.borrow().children.iter() {
+        load_nodes(instances, nodes, &child, transform);
     }
 }
 
@@ -69,7 +90,6 @@ impl Scene {
             ],
         )
         .unwrap();
-        //println!("{:#?}", scene);
 
         let mut positions = vec![];
         let mut indices = vec![];
@@ -101,10 +121,12 @@ impl Scene {
             })
         }
         let mut instances = vec![];
+        let mut nodes = HashMap::new();
 
         load_nodes(
             &mut instances,
-            &scene.root.as_ref().unwrap().borrow(),
+            &mut nodes,
+            &scene.root.as_ref().unwrap(),
             glam::Mat4::IDENTITY,
         );
 
@@ -112,11 +134,8 @@ impl Scene {
             .cameras
             .iter()
             .map(|camera| {
-                let to_world = glam::Mat4::look_at_rh(
-                    glam::vec3(camera.position.x, camera.position.y, camera.position.z),
-                    glam::vec3(camera.look_at.x, camera.look_at.y, camera.look_at.z),
-                    glam::vec3(camera.up.x, camera.up.y, camera.up.z),
-                );
+                let to_world = nodes[&camera.name].transform;
+                println!("{:#?}", to_world);
                 let fov_x = camera.horizontal_fov;
                 let aspect = camera.aspect;
                 let fov_y = ((fov_x / 2.).atan() / aspect).tan() * 2.;

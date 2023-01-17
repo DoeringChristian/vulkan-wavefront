@@ -42,17 +42,19 @@ pub fn ray_gen(
     let near_p = view_to_camera * glam::vec4(uv_pos.x, uv_pos.y, 0., 1.);
     let near_p = near_p.xyz();
 
-    let o = camera.to_world.z_axis.xyz();
+    let o = camera.to_world.w_axis.xyz();
     let d = near_p.normalize();
 
     ray.o = o.extend(0.);
-    ray.d = camera.to_world * near_p.normalize().extend(0.);
+    ray.d = (camera.to_world * near_p.normalize().extend(0.)).normalize();
 
     let near_t = camera.near_clip / -d.z;
     let far_t = camera.far_clip / -d.z;
 
-    ray.tmin = near_t;
-    ray.tmax = far_t - near_t;
+    //ray.tmin = near_t;
+    //ray.tmax = far_t - near_t;
+    ray.tmin = 0.001;
+    ray.tmax = 10000.;
 }
 
 #[spirv(compute(threads(64)))]

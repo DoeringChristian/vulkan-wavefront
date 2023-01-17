@@ -1,5 +1,6 @@
 use spirv_std::glam;
 
+#[cfg_attr(not(target_arch = "spirv"), derive(Debug))]
 #[derive(Copy, Clone)]
 #[repr(C, align(16))]
 pub struct Camera {

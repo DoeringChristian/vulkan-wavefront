@@ -48,7 +48,7 @@ fn main() {
         TypedBuffer::unsafe_create_from_slice(
             &sc13.device,
             vk::BufferUsageFlags::STORAGE_BUFFER,
-            &vec![Ray::default(); 1920 * 1080],
+            &vec![Ray::default(); 1 * 1],
         )
     };
 
@@ -56,7 +56,7 @@ fn main() {
         TypedBuffer::unsafe_create_from_slice(
             &sc13.device,
             vk::BufferUsageFlags::STORAGE_BUFFER,
-            &vec![IndependentSampler::default(); 1920 * 1080],
+            &vec![IndependentSampler::default(); 1 * 1],
         )
     };
     raygen_renderer.record(
@@ -65,8 +65,8 @@ fn main() {
         scene.cameras[0],
         0,
         1,
-        1920,
-        1080,
+        1,
+        1,
         &mut cache,
         &mut rgraph,
     );
