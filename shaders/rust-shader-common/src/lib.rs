@@ -5,12 +5,14 @@ use spirv_std::glam;
 use spirv_std::glam::Vec4Swizzles;
 
 mod camera;
+mod path;
 mod pcg;
 mod rand;
 mod ray;
 mod sampler;
 
 pub use camera::Camera;
+pub use path::PathCtx;
 pub use pcg::PCG;
 pub use rand::sample_tea_32;
 pub use ray::Ray;
