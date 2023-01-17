@@ -13,9 +13,11 @@ use spirv_std::spirv;
 #[spirv(compute(threads(64)))]
 pub fn ray_gen(
     #[spirv(global_invocation_id)] idx: glam::UVec3,
-    #[spirv(storage_buffer, descriptor_set = 0, binding = 0)] ray: &mut [Ray],
     #[spirv(push_constant)] camera: &Camera,
+    #[spirv(storage_buffer, descriptor_set = 0, binding = 0)] ray: &mut [Ray],
+    //#[spirv(storage_buffer, descriptor_set = 0, binding = 1)] sampler: &mut [PCG],
 ) {
+    let ray = &mut ray[(idx.y * camera.size.x + idx.x) as usize];
     todo!()
 }
 

@@ -88,13 +88,13 @@ impl RayGenRenderer {
 
     pub fn record(
         &self,
-        scene: &Scene,
         rays: &TypedBuffer<Ray>,
         camera: Camera,
         cache: &mut HashPool,
         rgraph: &mut RenderGraph,
     ) {
         let count = rays.count();
+        assert!((camera.size.x * camera.size.y) as usize == count);
 
         let ray_node = rgraph.bind_node(&rays.buf);
 
@@ -104,7 +104,7 @@ impl RayGenRenderer {
             .write_descriptor((0, 0), ray_node)
             .record_compute(move |compute, _| {
                 compute.push_constants(unsafe { util::cast_slice(&[camera]) });
-                compute.dispatch(count as u32, 1, 1);
+                compute.dispatch(camera.size.x, camera.size.y, 1);
             })
             .submit_pass();
     }

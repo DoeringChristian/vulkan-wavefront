@@ -5,7 +5,7 @@ fn main() {
         .extension("SPV_KHR_ray_query")
         //.extension("SPV_KHR_physical_storage_buffer")
         .capability(Capability::RayQueryKHR)
-        //.capability(Capability::Int64)
+        .capability(Capability::Int64)
         //.capability(Capability::PhysicalStorageBufferAddresses)
         //.capability(Capability::RuntimeDescriptorArray)
         .print_metadata(MetadataPrintout::Full)
