@@ -4,7 +4,6 @@
 mod integrator;
 mod interaction;
 mod rand;
-mod ray;
 mod sampler;
 mod scene;
 mod warp;
