@@ -43,18 +43,6 @@ fn main() {
     let mut scene = Scene::load(&sc13.device, &Path::new("assets/scenes/default.fbx"));
     scene.update(&mut cache, &mut rgraph);
 
-    let ray = Array::from_slice_mappable(
-        &sc13.device,
-        vk::BufferUsageFlags::STORAGE_BUFFER,
-        &vec![Ray::default(); 1 * 1],
-    );
-
-    let sampler = Array::from_slice_mappable(
-        &sc13.device,
-        vk::BufferUsageFlags::STORAGE_BUFFER,
-        &vec![IndependentSampler::default(); 1 * 1],
-    );
-
     // let rays = vec![Ray::new(vec3(0., 0., 0.), vec3(-1., 0., 0.))];
     // let rays = unsafe {
     //     TypedBuffer::unsafe_create_from_slice(
@@ -80,6 +68,6 @@ fn main() {
         sc13.device.device_wait_idle().unwrap();
     }
 
-    let rays: &[Ray] = unsafe { util::try_cast_slice(Buffer::mapped_slice(&ray)).unwrap() };
-    println!("{:#?}", rays);
+    // let rays: &[Ray] = unsafe { util::try_cast_slice(Buffer::mapped_slice(&ray)).unwrap() };
+    // println!("{:#?}", rays);
 }

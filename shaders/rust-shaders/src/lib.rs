@@ -7,7 +7,6 @@ mod rand;
 mod ray;
 mod sampler;
 mod scene;
-mod util;
 mod warp;
 
 //use bytemuck::{Pod, Zeroable};
@@ -22,114 +21,18 @@ use spirv_std::spirv;
 use self::scene::Scene;
 
 #[spirv(compute(threads(64)))]
-pub fn ray_gen(
-    #[spirv(global_invocation_id)] gidx: glam::UVec3,
-    #[spirv(push_constant)] push_constant: &RgenPushConstant,
-    #[spirv(storage_buffer, descriptor_set = 0, binding = 0)] ray: &mut [Ray],
-    #[spirv(storage_buffer, descriptor_set = 0, binding = 1)] sampler: &mut [IndependentSampler],
-) {
-    let camera = push_constant.camera;
-    let spp = push_constant.spp;
-    let seed = push_constant.seed;
-    let width = push_constant.width;
-    let height = push_constant.height;
-
-    let idx: usize = gidx.y as usize * width as usize * spp as usize
-        + gidx.x as usize * spp as usize
-        + gidx.z as usize;
-
-    let ray = &mut ray[idx];
-    let sampler = &mut sampler[idx];
-
-    sampler.seed(seed, idx as _);
-
-    let sample = sampler.next_2d();
-    let pos = glam::vec2(gidx.x as f32, gidx.x as f32); // TODO: maybe use idx to calculate pos
-    let adjusted_pos = pos + sample;
-    let uv_pos = adjusted_pos / glam::vec2(width as _, height as _);
-
-    let view_to_camera = camera.to_view.inverse();
-
-    let near_p = view_to_camera * glam::vec4(uv_pos.x, uv_pos.y, 0., 1.);
-    let near_p = near_p.xyz();
-
-    let o = camera.to_world.w_axis.xyz();
-    let d = near_p.normalize();
-
-    ray.o = o.extend(0.);
-    ray.d = (camera.to_world * near_p.normalize().extend(0.)).normalize();
-
-    let near_t = camera.near_clip / -d.z;
-    let far_t = camera.far_clip / -d.z;
-
-    //ray.tmin = near_t;
-    //ray.tmax = far_t - near_t;
-    ray.tmin = 0.001;
-    ray.tmax = 10000.;
-}
-
-#[spirv(compute(threads(64)))]
-pub fn ray_intersect(
-    #[spirv(global_invocation_id)] idx: glam::UVec3,
-    #[spirv(storage_buffer, descriptor_set = 0, binding = 0)] indices: &[u32],
-    #[spirv(storage_buffer, descriptor_set = 0, binding = 1)] positions: &[u32],
-    #[spirv(storage_buffer, descriptor_set = 0, binding = 2)] meshes: &[MeshData],
-    #[spirv(storage_buffer, descriptor_set = 0, binding = 3)] instances: &[InstanceData],
-    #[spirv(uniform_constant, descriptor_set = 0, binding = 4)] accel: &AccelerationStructure,
-    #[spirv(storage_buffer, descriptor_set = 0, binding = 5)] ray: &[Ray],
-    #[spirv(storage_buffer, descriptor_set = 0, binding = 6)] hit: &mut [HitInfo],
-) {
-    let i = idx.x as usize;
-    let hit = &mut hit[i];
-    let ray = &ray[i];
-
-    unsafe {
-        spirv_std::ray_query!(let mut query);
-        query.initialize(
-            accel,
-            RayFlags::OPAQUE,
-            0xff,
-            ray.o(),
-            ray.tmin,
-            ray.d(),
-            ray.tmax,
-        );
-
-        while query.proceed() {
-            if query.get_candidate_intersection_type() == CandidateIntersection::Triangle {
-                query.confirm_intersection();
-            } else if query.get_candidate_intersection_type() == CandidateIntersection::AABB {
-                query.confirm_intersection();
-            }
-        }
-
-        if query.get_committed_intersection_type() == CommittedIntersection::Triangle {
-            // ray hit triangle
-            hit.t = query.get_committed_intersection_t();
-            hit.p = ray.o + ray.d * hit.t;
-            hit.instance_id = query.get_committed_intersection_instance_id();
-            hit.geometry_index = query.get_committed_intersection_primitive_index();
-            hit.valid = 1;
-        } else {
-            // ray hit sky
-            hit.valid = 0;
-            hit.t = ray.tmax;
-        }
-    }
-}
-
-#[spirv(compute(threads(64)))]
 pub fn path_trace(
     #[spirv(global_invocation_id)] idx3: glam::UVec3,
-    #[spirv(num_workgroups)] num: glam::UVec3,
+    #[spirv(num_workgroups)] size: glam::UVec3,
+    #[spirv(push_constant)] push_constant: &PathTracePushConstant,
     #[spirv(storage_buffer, descriptor_set = 0, binding = 0)] indices: &[u32],
     #[spirv(storage_buffer, descriptor_set = 0, binding = 1)] positions: &[u32],
     #[spirv(storage_buffer, descriptor_set = 0, binding = 2)] meshes: &[MeshData],
     #[spirv(storage_buffer, descriptor_set = 0, binding = 3)] instances: &[InstanceData],
     #[spirv(uniform_constant, descriptor_set = 0, binding = 4)] accel: &AccelerationStructure,
 ) {
-    let idx = idx3.x as usize * num.y as usize * num.z as usize
-        + idx3.y as usize * num.z as usize
+    let idx = idx3.x as usize * size.y as usize * size.z as usize
+        + idx3.y as usize * size.z as usize
         + idx3.z as usize;
 
     let scene = Scene {

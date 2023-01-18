@@ -1,4 +1,4 @@
-use rust_shader_common::{InstanceData, MeshData, Ray};
+use rust_shader_common::{InstanceData, MeshData, Ray3f};
 use spirv_std::glam::*;
 use spirv_std::ray_tracing::{
     AccelerationStructure, CandidateIntersection, CommittedIntersection, RayFlags, RayQuery,
@@ -15,16 +15,16 @@ pub struct Scene<'a> {
 }
 
 impl<'a> Scene<'a> {
-    pub fn ray_intersect(&self, ray: &Ray) -> SurfaceInteraction3f {
+    pub fn ray_intersect(&self, ray: &Ray3f) -> SurfaceInteraction3f {
         unsafe {
             spirv_std::ray_query!(let mut query);
             query.initialize(
                 self.accel,
                 RayFlags::OPAQUE,
                 0xff,
-                ray.o(),
+                ray.o,
                 ray.tmin,
-                ray.d(),
+                ray.d,
                 ray.tmax,
             );
 
@@ -44,31 +44,32 @@ impl<'a> Scene<'a> {
                     p: ray.o + ray.d * t,
                     instance_id: query.get_committed_intersection_instance_id(),
                     geometry_idx: query.get_committed_intersection_primitive_index(),
-                    valid: 1,
+                    valid: true,
                     ..Default::default()
                 }
             } else {
                 // ray hit sky
                 SurfaceInteraction3f {
-                    valid: 0,
+                    valid: false,
                     t: ray.tmax,
                     ..Default::default()
                 }
             }
         }
     }
-    pub fn ray_test(&self, ray: &Ray) -> bool {
+    pub fn ray_test(&self, ray: &Ray3f) -> bool {
         unsafe {
             spirv_std::ray_query!(let mut query);
             query.initialize(
                 self.accel,
                 RayFlags::OPAQUE,
                 0xff,
-                ray.o(),
+                ray.o,
                 ray.tmin,
-                ray.d(),
+                ray.d,
                 ray.tmax,
             );
+            query.proceed()
         }
     }
 }

@@ -41,35 +41,30 @@ impl PTRenderer {
     pub fn record(
         &self,
         scene: &Scene,
-        rays: &Array<Ray>,
         hit_info: &Array<HitInfo>,
         cache: &mut HashPool,
         rgraph: &mut RenderGraph,
     ) {
-        let count = rays.count();
-        assert!(count == hit_info.count());
-
-        let indices_node = rgraph.bind_node(&scene.indices.buf);
-        let positions_node = rgraph.bind_node(&scene.positions.buf);
-        let mesh_data_node = rgraph.bind_node(&scene.mesh_data.as_ref().unwrap().buf);
-        let instance_data_node = rgraph.bind_node(&scene.instance_data.as_ref().unwrap().buf);
-        let accel_node = rgraph.bind_node(&scene.tlas.as_ref().unwrap().accel);
-        let ray_node = rgraph.bind_node(&rays.buf);
-        let hit_info_node = rgraph.bind_node(&hit_info.buf);
-
-        rgraph
-            .begin_pass("IntersectionRenderPass")
-            .bind_pipeline(&self.ppl)
-            .read_descriptor((0, 0), indices_node)
-            .read_descriptor((0, 1), positions_node)
-            .read_descriptor((0, 2), mesh_data_node)
-            .read_descriptor((0, 3), instance_data_node)
-            .read_descriptor((0, 4), accel_node)
-            .read_descriptor((0, 5), ray_node)
-            .write_descriptor((0, 6), hit_info_node)
-            .record_compute(move |compute, _| {
-                compute.dispatch(count as u32, 1, 1);
-            })
-            .submit_pass();
+        // let indices_node = rgraph.bind_node(&scene.indices.buf);
+        // let positions_node = rgraph.bind_node(&scene.positions.buf);
+        // let mesh_data_node = rgraph.bind_node(&scene.mesh_data.as_ref().unwrap().buf);
+        // let instance_data_node = rgraph.bind_node(&scene.instance_data.as_ref().unwrap().buf);
+        // let accel_node = rgraph.bind_node(&scene.tlas.as_ref().unwrap().accel);
+        // let hit_info_node = rgraph.bind_node(&hit_info.buf);
+        //
+        // rgraph
+        //     .begin_pass("IntersectionRenderPass")
+        //     .bind_pipeline(&self.ppl)
+        //     .read_descriptor((0, 0), indices_node)
+        //     .read_descriptor((0, 1), positions_node)
+        //     .read_descriptor((0, 2), mesh_data_node)
+        //     .read_descriptor((0, 3), instance_data_node)
+        //     .read_descriptor((0, 4), accel_node)
+        //     .read_descriptor((0, 5), ray_node)
+        //     .write_descriptor((0, 6), hit_info_node)
+        //     .record_compute(move |compute, _| {
+        //         compute.dispatch(count as u32, 1, 1);
+        //     })
+        //     .submit_pass();
     }
 }

@@ -4,7 +4,8 @@
 use spirv_std::glam;
 use spirv_std::glam::Vec4Swizzles;
 
-mod camera;
+mod ray;
+mod sensor;
 //mod path;
 //mod pcg;
 //mod rand;
@@ -12,7 +13,8 @@ mod camera;
 //mod sampler;
 //mod warp;
 
-pub use camera::Camera;
+pub use ray::Ray3f;
+pub use sensor::Sensor;
 //pub use path::PathCtx;
 //pub use pcg::PCG;
 //pub use rand::sample_tea_32;
@@ -53,8 +55,8 @@ pub struct HitInfo {
 
 #[derive(Copy, Clone)]
 #[repr(C, align(16))]
-pub struct RgenPushConstant {
-    pub camera: Camera,
+pub struct PathTracePushConstant {
+    pub camera: Sensor,
     pub seed: u32,
     pub spp: u32,
     pub width: u32,

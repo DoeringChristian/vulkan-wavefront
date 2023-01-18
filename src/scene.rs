@@ -29,7 +29,7 @@ pub struct Scene {
     pub indices: Arc<Array<u32>>,
     pub meshes: Vec<Mesh>,
     pub instances: Vec<Instance>,
-    pub cameras: Vec<Camera>,
+    pub cameras: Vec<Sensor>,
 
     pub blases: Vec<Blas<glam::Vec3>>,
     pub tlas: Option<Tlas>,
@@ -139,7 +139,7 @@ impl Scene {
                 let fov_x = camera.horizontal_fov;
                 let aspect = camera.aspect;
                 let fov_y = ((fov_x / 2.).atan() / aspect).tan() * 2.;
-                Camera::perspective(
+                Sensor::perspective(
                     to_world,
                     fov_y,
                     aspect,
@@ -271,14 +271,5 @@ impl Scene {
             .as_ref()
             .unwrap()
             .build(cache, rgraph, &blas_nodes);
-    }
-
-    pub fn ray_intersect(
-        &mut self,
-        rays: Array<Ray>,
-        cache: &mut HashPool,
-        rgraph: &mut RenderGraph,
-    ) -> Array<HitInfo> {
-        todo!()
     }
 }

@@ -1,11 +1,11 @@
 use spirv_std::glam::*;
 
-use crate::Ray;
+use crate::ray::Ray3f;
 
 #[cfg_attr(not(target_arch = "spirv"), derive(Debug))]
 #[derive(Copy, Clone)]
 #[repr(C, align(16))]
-pub struct Camera {
+pub struct Sensor {
     pub to_world: Mat4,
     pub to_view: Mat4,
     //pub size: UVec2,
@@ -13,7 +13,7 @@ pub struct Camera {
     pub far_clip: f32,
 }
 
-impl Camera {
+impl Sensor {
     pub fn perspective(
         to_world: Mat4,
         fov_y: f32,
@@ -30,8 +30,8 @@ impl Camera {
         }
     }
 
-    pub fn sample_ray(&self, position_sample: Vec2) -> Ray {
-        let mut ray = Ray::default();
+    pub fn sample_ray(&self, position_sample: Vec2) -> Ray3f {
+        let mut ray = Ray3f::default();
 
         let view_to_camera = self.to_view.inverse();
 
@@ -41,8 +41,10 @@ impl Camera {
         let o = self.to_world.w_axis.xyz();
         let d = near_p.normalize();
 
-        ray.o = o.extend(0.);
-        ray.d = (self.to_world * near_p.normalize().extend(0.)).normalize();
+        ray.o = o;
+        ray.d = (self.to_world * near_p.normalize().extend(0.))
+            .normalize()
+            .xyz();
 
         let near_t = self.near_clip / -d.z;
         let far_t = self.far_clip / -d.z;
