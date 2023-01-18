@@ -10,7 +10,7 @@ mod warp;
 
 //use bytemuck::{Pod, Zeroable};
 use rust_shader_common::*;
-use spirv_std::glam::Vec4Swizzles;
+use spirv_std::glam::*;
 use spirv_std::ray_tracing::{
     AccelerationStructure, CandidateIntersection, CommittedIntersection, RayFlags, RayQuery,
 };
@@ -25,11 +25,13 @@ pub fn path_trace(
     #[spirv(num_workgroups)] size: glam::UVec3,
     #[spirv(push_constant)] push_constant: &PathTracePushConstant,
     #[spirv(storage_buffer, descriptor_set = 0, binding = 0)] indices: &[u32],
-    #[spirv(storage_buffer, descriptor_set = 0, binding = 1)] positions: &[u32],
-    #[spirv(storage_buffer, descriptor_set = 0, binding = 2)] meshes: &[Mesh],
-    #[spirv(storage_buffer, descriptor_set = 0, binding = 3)] instances: &[Instance],
-    #[spirv(uniform_constant, descriptor_set = 0, binding = 4)] accel: &AccelerationStructure,
-    #[spirv(uniform_constant, descriptor_set = 0, binding = 5)] color: &mut Image!(
+    #[spirv(storage_buffer, descriptor_set = 0, binding = 1)] positions: &[Vec3],
+    #[spirv(storage_buffer, descriptor_set = 0, binding = 2)] normals: &[Vec3],
+    #[spirv(storage_buffer, descriptor_set = 0, binding = 3)] tangents: &[Vec3],
+    #[spirv(storage_buffer, descriptor_set = 0, binding = 4)] meshes: &[Mesh],
+    #[spirv(storage_buffer, descriptor_set = 0, binding = 5)] instances: &[Instance],
+    #[spirv(uniform_constant, descriptor_set = 0, binding = 6)] accel: &AccelerationStructure,
+    #[spirv(uniform_constant, descriptor_set = 0, binding = 7)] color: &mut Image!(
         2D,
         format = rgba32f,
         sampled = false
@@ -42,6 +44,8 @@ pub fn path_trace(
     let scene = Scene {
         indices,
         positions,
+        normals,
+        tangents,
         meshes,
         instances,
         accel,
