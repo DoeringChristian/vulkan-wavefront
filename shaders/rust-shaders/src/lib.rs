@@ -1,6 +1,8 @@
 #![no_std]
 #![cfg_attr(target_arch = "spirv", feature(asm_experimental_arch,))]
 
+mod util;
+
 //use bytemuck::{Pod, Zeroable};
 use rust_shader_common::*;
 use spirv_std::glam;
