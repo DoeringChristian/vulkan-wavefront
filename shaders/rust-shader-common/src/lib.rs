@@ -1,5 +1,7 @@
 #![cfg_attr(target_arch = "spirv", no_std, feature(asm_experimental_arch,))]
 
+use core::ops::Range;
+
 //use bytemuck::{Pod, Zeroable};
 use spirv_std::glam;
 use spirv_std::glam::Vec4Swizzles;
@@ -21,23 +23,18 @@ pub use sensor::Sensor;
 //pub use ray::Ray;
 //pub use sampler::IndependentSampler;
 
-#[derive(Copy, Clone)]
+#[derive(Clone)]
 #[repr(C)]
-pub struct Range {
-    pub start: usize,
-    pub end: usize,
+pub struct Mesh {
+    pub indices: Range<u32>,
+    pub positions: Range<u32>,
+    pub normals: Range<u32>,
+    pub tangents: Range<u32>,
 }
 
-#[derive(Copy, Clone)]
+#[derive(Clone)]
 #[repr(C)]
-pub struct MeshData {
-    pub indices: (u32, u32),
-    pub positions: (u32, u32),
-}
-
-#[derive(Copy, Clone)]
-#[repr(C)]
-pub struct InstanceData {
+pub struct Instance {
     pub transform: glam::Mat4,
     pub mesh_idx: usize,
 }

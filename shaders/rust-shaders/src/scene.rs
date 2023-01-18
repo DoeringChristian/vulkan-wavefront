@@ -1,4 +1,4 @@
-use rust_shader_common::{InstanceData, MeshData, Ray3f};
+use rust_shader_common::{Instance, Mesh, Ray3f};
 use spirv_std::glam::*;
 use spirv_std::ray_tracing::{
     AccelerationStructure, CandidateIntersection, CommittedIntersection, RayFlags, RayQuery,
@@ -9,8 +9,8 @@ use crate::interaction::SurfaceInteraction3f;
 pub struct Scene<'a> {
     pub indices: &'a [u32],
     pub positions: &'a [u32],
-    pub meshes: &'a [MeshData],
-    pub instances: &'a [InstanceData],
+    pub meshes: &'a [Mesh],
+    pub instances: &'a [Instance],
     pub accel: &'a AccelerationStructure,
 }
 

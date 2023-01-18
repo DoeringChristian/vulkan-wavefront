@@ -11,20 +11,14 @@ use std::path::Path;
 use std::rc::Rc;
 use std::sync::Arc;
 
-#[derive(Debug, Clone)]
-pub struct Mesh {
-    indices: std::ops::Range<usize>,
-    positions: std::ops::Range<usize>,
-    normals: std::ops::Range<usize>,
-    tangents: std::ops::Range<usize>,
-    //uvs: std::ops::Range<usize>,
-}
-
-#[derive(Debug, Clone, Copy)]
-pub struct Instance {
-    transform: glam::Mat4,
-    mesh_idx: usize,
-}
+//#[derive(Debug, Clone)]
+//pub struct Mesh {
+//    indices: std::ops::Range<usize>,
+//    positions: std::ops::Range<usize>,
+//    normals: std::ops::Range<usize>,
+//    tangents: std::ops::Range<usize>,
+//    //uvs: std::ops::Range<usize>,
+//}
 
 pub struct Scene {
     device: Arc<Device>,
@@ -41,8 +35,8 @@ pub struct Scene {
     pub blases: Vec<Blas<glam::Vec3>>,
     pub tlas: Option<Tlas>,
 
-    pub instance_data: Option<Arc<Array<InstanceData>>>,
-    pub mesh_data: Option<Arc<Array<MeshData>>>,
+    pub instance_data: Option<Array<Instance>>,
+    pub mesh_data: Option<Array<Mesh>>,
 }
 
 fn matrix4x4_to_mat4(src: &Matrix4x4) -> glam::Mat4 {
@@ -124,13 +118,10 @@ impl Scene {
                 indices.push(face.0[2]);
             }
             meshes.push(Mesh {
-                indices: std::ops::Range {
-                    start: indices_offset,
-                    end: indices.len(),
-                },
-                positions: positions_offset..positions.len(),
-                normals: normals_offset..normals.len(),
-                tangents: tangents_offset..tangents.len(),
+                indices: indices_offset as _..indices.len() as _,
+                positions: positions_offset as _..positions.len() as _,
+                normals: normals_offset as _..normals.len() as _,
+                tangents: tangents_offset as _..tangents.len() as _,
             })
         }
         let mut instances = vec![];
@@ -194,12 +185,13 @@ impl Scene {
     pub fn update(&mut self, cache: &mut HashPool, rgraph: &mut RenderGraph) {
         // Create blases
         for instance in self.instances.iter() {
+            let mesh = &self.meshes[instance.mesh_idx];
             self.blases.push(Blas::create(
                 &self.device,
                 &self.indices,
-                self.meshes[instance.mesh_idx].indices.clone().into(),
+                mesh.indices.start as _..mesh.indices.end as _,
                 &self.positions,
-                self.meshes[instance.mesh_idx].positions.clone().into(),
+                mesh.indices.start as _..mesh.indices.end as _,
             ))
         }
         // Transform instances into AccelerationStructureInstanceKHR types
@@ -239,39 +231,21 @@ impl Scene {
         self.tlas = Tlas::create(&self.device, &instances);
 
         // Turn meshs and instances into mesh_data and instance_data
-        let mesh_data = self
-            .meshes
-            .iter()
-            .map(|mesh| MeshData {
-                indices: (mesh.indices.start as _, mesh.indices.end as _),
-                positions: (mesh.positions.start as _, mesh.positions.end as _),
-            })
-            .collect::<Vec<_>>();
+        let mesh_data = self.meshes.iter().cloned().collect::<Vec<_>>();
 
-        let instance_data = self
-            .instances
-            .iter()
-            .map(|instance| InstanceData {
-                transform: instance.transform,
-                mesh_idx: instance.mesh_idx,
-            })
-            .collect::<Vec<_>>();
+        let instance_data = self.instances.iter().cloned().collect::<Vec<_>>();
 
         // Upload mesh and instance data
-        self.mesh_data = Some(Arc::new(unsafe {
-            Array::from_slice_mappable(
-                &self.device,
-                vk::BufferUsageFlags::STORAGE_BUFFER,
-                &mesh_data,
-            )
-        }));
-        self.instance_data = Some(Arc::new(unsafe {
-            Array::from_slice_mappable(
-                &self.device,
-                vk::BufferUsageFlags::STORAGE_BUFFER,
-                &instance_data,
-            )
-        }));
+        self.mesh_data = Some(Array::from_slice_mappable(
+            &self.device,
+            vk::BufferUsageFlags::STORAGE_BUFFER,
+            &mesh_data,
+        ));
+        self.instance_data = Some(Array::from_slice_mappable(
+            &self.device,
+            vk::BufferUsageFlags::STORAGE_BUFFER,
+            &instance_data,
+        ));
 
         // Build blas and tlas
         let blas_nodes = self

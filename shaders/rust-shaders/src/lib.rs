@@ -26,8 +26,8 @@ pub fn path_trace(
     #[spirv(push_constant)] push_constant: &PathTracePushConstant,
     #[spirv(storage_buffer, descriptor_set = 0, binding = 0)] indices: &[u32],
     #[spirv(storage_buffer, descriptor_set = 0, binding = 1)] positions: &[u32],
-    #[spirv(storage_buffer, descriptor_set = 0, binding = 2)] meshes: &[MeshData],
-    #[spirv(storage_buffer, descriptor_set = 0, binding = 3)] instances: &[InstanceData],
+    #[spirv(storage_buffer, descriptor_set = 0, binding = 2)] meshes: &[Mesh],
+    #[spirv(storage_buffer, descriptor_set = 0, binding = 3)] instances: &[Instance],
     #[spirv(uniform_constant, descriptor_set = 0, binding = 4)] accel: &AccelerationStructure,
     #[spirv(uniform_constant, descriptor_set = 0, binding = 5)] color: &mut Image!(
         2D,
