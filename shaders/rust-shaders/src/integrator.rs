@@ -19,7 +19,14 @@ impl PathIntegrator {
             + idx3.y as usize * size.z as usize
             + idx3.z as usize;
 
-        let sampler = IndependentSampler::new(seed, idx as _);
+        let mut sampler = IndependentSampler::new(seed, idx as _);
+
+        let pos = idx3.as_vec3().xy();
+
+        let sample_pos = pos + sampler.next_2d();
+        let adjusted_pos = sample_pos / size.as_vec3().xy();
+
+        let ray = sensor.sample_ray(adjusted_pos);
 
         todo!()
     }
