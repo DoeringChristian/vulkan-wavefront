@@ -9,3 +9,12 @@ pub struct SurfaceInteraction3f {
     pub geometry_idx: u32,
     pub valid: bool,
 }
+
+impl SurfaceInteraction3f {
+    pub fn to_local(world_p: Vec3) -> Vec3 {
+        todo!()
+    }
+    pub fn to_world(local_p: Vec3) -> Vec3 {
+        todo!()
+    }
+}

@@ -1,4 +1,5 @@
 use screen_13::prelude::*;
+use std::marker::PhantomData;
 use std::mem::size_of;
 use std::ops::Range;
 use std::{collections::HashMap, sync::Arc};
@@ -8,12 +9,14 @@ use crate::array::Array;
 pub struct Blas<T> {
     pub accel: Arc<AccelerationStructure>,
     // Not sure about the use of weaks.
-    pub indices: Arc<Array<u32>>,
-    pub positions: Arc<Array<T>>,
+    pub indices: Arc<Buffer>,
+    pub positions: Arc<Buffer>,
+    triangle_count: usize,
     geometry_info: AccelerationStructureGeometryInfo,
     size: AccelerationStructureSize,
     primitive_range: Range<usize>,
     vertex_range: Range<usize>,
+    _ty: PhantomData<T>,
 }
 
 impl<T> Blas<T> {
@@ -21,8 +24,8 @@ impl<T> Blas<T> {
         //let geometry = scene.geometries.get(self.geometry).unwrap();
         let indices = self.indices.clone();
         let positions = self.positions.clone();
-        let index_node = rgraph.bind_node(&**indices);
-        let vertex_node = rgraph.bind_node(&**positions);
+        let index_node = rgraph.bind_node(&indices);
+        let vertex_node = rgraph.bind_node(&positions);
         let accel_node = rgraph.bind_node(&self.accel);
 
         let scratch_buf = rgraph.bind_node(
@@ -35,7 +38,7 @@ impl<T> Blas<T> {
                 .unwrap(),
         );
 
-        let triangle_count = indices.count() as u64 / 3;
+        let triangle_count = self.triangle_count;
         let geometry_info = self.geometry_info.clone();
         let primitive_range = self.primitive_range.clone();
         let vertex_range = self.vertex_range.clone();
@@ -63,9 +66,9 @@ impl<T> Blas<T> {
     }
     pub fn create(
         device: &Arc<Device>,
-        indices: &Arc<Array<u32>>,
+        indices: &Array<u32>,
         index_range: Range<usize>,
-        positions: &Arc<Array<T>>,
+        positions: &Array<T>,
         positions_range: Range<usize>,
     ) -> Self {
         //let triangle_count = geometry.indices.count() / 3;
@@ -109,15 +112,17 @@ impl<T> Blas<T> {
         Self {
             //geometry: gkey,
             accel: Arc::new(accel),
-            indices: indices.clone(),
-            positions: positions.clone(),
+            indices: indices.buf.clone(),
+            positions: positions.buf.clone(),
             geometry_info,
             size: accel_size,
+            triangle_count: indices.count() / 3,
             primitive_range: Range {
                 start: index_range.start / 3,
                 end: index_range.end / 3,
             },
             vertex_range: positions_range.clone(),
+            _ty: PhantomData::default(),
         }
     }
 }

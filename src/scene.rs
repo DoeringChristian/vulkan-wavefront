@@ -15,6 +15,9 @@ use std::sync::Arc;
 pub struct Mesh {
     indices: std::ops::Range<usize>,
     positions: std::ops::Range<usize>,
+    normals: std::ops::Range<usize>,
+    tangents: std::ops::Range<usize>,
+    //uvs: std::ops::Range<usize>,
 }
 
 #[derive(Debug, Clone, Copy)]
@@ -25,8 +28,12 @@ pub struct Instance {
 
 pub struct Scene {
     device: Arc<Device>,
-    pub positions: Arc<Array<glam::Vec3>>,
-    pub indices: Arc<Array<u32>>,
+    pub positions: Array<glam::Vec3>,
+    pub normals: Array<glam::Vec3>,
+    pub tangents: Array<glam::Vec3>,
+    //pub uvs: Array<glam::Vec3>,
+    pub indices: Array<u32>,
+
     pub meshes: Vec<Mesh>,
     pub instances: Vec<Instance>,
     pub cameras: Vec<Sensor>,
@@ -93,16 +100,23 @@ impl Scene {
 
         let mut positions = vec![];
         let mut indices = vec![];
+        let mut normals = vec![];
+        let mut tangents = vec![];
         let mut meshes = vec![];
         for mesh in scene.meshes.iter() {
             let positions_offset = positions.len();
             for v in mesh.vertices.iter() {
-                positions.push(glam::Vec3 {
-                    x: v.x,
-                    y: v.y,
-                    z: v.z,
-                })
+                positions.push(glam::vec3(v.x, v.y, v.z));
             }
+            let normals_offset = normals.len();
+            for n in mesh.normals.iter() {
+                normals.push(glam::vec3(n.x, n.y, n.z))
+            }
+            let tangents_offset = tangents.len();
+            for t in mesh.tangents.iter() {
+                tangents.push(glam::vec3(t.x, t.y, t.z));
+            }
+
             let indices_offset = indices.len();
             for face in mesh.faces.iter() {
                 indices.push(face.0[0]);
@@ -114,10 +128,9 @@ impl Scene {
                     start: indices_offset,
                     end: indices.len(),
                 },
-                positions: std::ops::Range {
-                    start: positions_offset,
-                    end: positions.len(),
-                },
+                positions: positions_offset..positions.len(),
+                normals: normals_offset..normals.len(),
+                tangents: tangents_offset..tangents.len(),
             })
         }
         let mut instances = vec![];
@@ -152,20 +165,22 @@ impl Scene {
         Self {
             meshes,
             instances,
-            positions: Arc::new(Array::from_slice(
+            positions: Array::from_slice(
                 device,
                 vk::BufferUsageFlags::STORAGE_BUFFER
                     | vk::BufferUsageFlags::SHADER_DEVICE_ADDRESS
                     | vk::BufferUsageFlags::ACCELERATION_STRUCTURE_BUILD_INPUT_READ_ONLY_KHR,
                 &positions,
-            )),
-            indices: Arc::new(Array::from_slice(
+            ),
+            indices: Array::from_slice(
                 device,
                 vk::BufferUsageFlags::STORAGE_BUFFER
                     | vk::BufferUsageFlags::SHADER_DEVICE_ADDRESS
                     | vk::BufferUsageFlags::ACCELERATION_STRUCTURE_BUILD_INPUT_READ_ONLY_KHR,
                 &indices,
-            )),
+            ),
+            normals: Array::from_slice(device, vk::BufferUsageFlags::STORAGE_BUFFER, &normals),
+            tangents: Array::from_slice(device, vk::BufferUsageFlags::STORAGE_BUFFER, &tangents),
             cameras,
 
             device: device.clone(),

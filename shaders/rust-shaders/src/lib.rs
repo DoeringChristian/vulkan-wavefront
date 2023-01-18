@@ -29,7 +29,7 @@ pub fn path_trace(
     #[spirv(storage_buffer, descriptor_set = 0, binding = 2)] meshes: &[MeshData],
     #[spirv(storage_buffer, descriptor_set = 0, binding = 3)] instances: &[InstanceData],
     #[spirv(uniform_constant, descriptor_set = 0, binding = 4)] accel: &AccelerationStructure,
-    #[spirv(uniform_constant, descriptor_set = 0, binding = 5)] color: Image!(
+    #[spirv(uniform_constant, descriptor_set = 0, binding = 5)] color: &mut Image!(
         2D,
         format = rgba32f,
         sampled = false

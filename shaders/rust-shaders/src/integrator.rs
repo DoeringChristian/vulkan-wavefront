@@ -1,12 +1,12 @@
-use rust_shader_common::Sensor;
+use rust_shader_common::{Ray3f, Sensor};
 use spirv_std::glam::*;
 
 use crate::sampler::IndependentSampler;
 use crate::scene::Scene;
 
-pub struct PathIntegrator {}
+pub struct SimplePathIntegrator {}
 
-impl PathIntegrator {
+impl SimplePathIntegrator {
     pub fn render(
         &self,
         scene: &Scene,
@@ -28,6 +28,19 @@ impl PathIntegrator {
 
         let ray = sensor.sample_ray(adjusted_pos);
 
+        todo!()
+    }
+
+    pub fn sample(&self, scene: &Scene, sampler: &mut IndependentSampler, ray: Ray3f) -> Vec3 {
+        let mut L = vec3(0., 0., 0.);
+        let mut f = vec3(1., 1., 1.);
+        let active = true;
+
+        while active {
+            let s = scene.ray_intersect(&ray);
+
+            // Direct emission
+        }
         todo!()
     }
 }

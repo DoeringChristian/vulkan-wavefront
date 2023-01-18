@@ -25,7 +25,7 @@ impl<T> Deref for Array<T> {
     }
 }
 
-impl<T: Copy> Array<T> {
+impl<T> Array<T> {
     pub fn from_slice(device: &Arc<Device>, usage: vk::BufferUsageFlags, data: &[T]) -> Self {
         let count = data.len();
         let stride = size_of::<T>();
