@@ -1,4 +1,4 @@
-use rust_shader_common::{HitInfo, Ray};
+use rust_shader_common::{HitInfo, InstanceData, MeshData, Ray};
 use spirv_std::ray_tracing::{
     AccelerationStructure, CandidateIntersection, CommittedIntersection, RayFlags, RayQuery,
 };
