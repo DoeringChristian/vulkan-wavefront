@@ -77,6 +77,14 @@ impl<'a> Scene<'a> {
                 let bitangent = normal.cross(tangent);
 
                 let tbn = mat3(tangent, bitangent, normal);
+                // Normal Transform usin inverse transpose
+                let normal_matrix = instance.transform.inverse().transpose();
+                let normal_matrix = mat3(
+                    normal_matrix.x_axis.xyz(),
+                    normal_matrix.y_axis.xyz(),
+                    normal_matrix.z_axis.xyz(),
+                );
+                let tbn = normal_matrix * tbn;
 
                 SurfaceInteraction3f {
                     t,
