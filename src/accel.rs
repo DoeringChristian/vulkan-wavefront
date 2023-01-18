@@ -3,13 +3,13 @@ use std::mem::size_of;
 use std::ops::Range;
 use std::{collections::HashMap, sync::Arc};
 
-use crate::buffer::TypedBuffer;
+use crate::array::Array;
 
 pub struct Blas<T> {
     pub accel: Arc<AccelerationStructure>,
     // Not sure about the use of weaks.
-    pub indices: Arc<TypedBuffer<u32>>,
-    pub positions: Arc<TypedBuffer<T>>,
+    pub indices: Arc<Array<u32>>,
+    pub positions: Arc<Array<T>>,
     geometry_info: AccelerationStructureGeometryInfo,
     size: AccelerationStructureSize,
     primitive_range: Range<usize>,
@@ -63,9 +63,9 @@ impl<T> Blas<T> {
     }
     pub fn create(
         device: &Arc<Device>,
-        indices: &Arc<TypedBuffer<u32>>,
+        indices: &Arc<Array<u32>>,
         index_range: Range<usize>,
-        positions: &Arc<TypedBuffer<T>>,
+        positions: &Arc<Array<T>>,
         positions_range: Range<usize>,
     ) -> Self {
         //let triangle_count = geometry.indices.count() / 3;
@@ -123,7 +123,7 @@ impl<T> Blas<T> {
 }
 
 pub struct Tlas {
-    instance_buf: Arc<TypedBuffer<u8>>,
+    instance_buf: Arc<Array<u8>>,
     pub accel: Arc<AccelerationStructure>,
     //pub instancedata_buf: TypedBuffer<GlslInstanceData>,
     geometry_info: AccelerationStructureGeometryInfo,
@@ -189,7 +189,7 @@ impl Tlas {
             return None;
         }
         // gl_CustomIndexEXT should index into attributes.
-        let instance_buf = Arc::new(TypedBuffer::create_from_slice(
+        let instance_buf = Arc::new(Array::from_slice(
             device,
             vk::BufferUsageFlags::ACCELERATION_STRUCTURE_BUILD_INPUT_READ_ONLY_KHR
                 | vk::BufferUsageFlags::SHADER_DEVICE_ADDRESS,

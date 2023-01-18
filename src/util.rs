@@ -1,7 +1,7 @@
 use std::mem::size_of;
 
 #[inline]
-pub unsafe fn try_cast_slice<A: Copy, B: Copy>(a: &[A]) -> Option<&[B]> {
+pub unsafe fn try_cast_slice<A, B>(a: &[A]) -> Option<&[B]> {
     // Note(Lokathor): everything with `align_of` and `size_of` will optimize away
     // after monomorphization.
     if std::mem::align_of::<B>() > std::mem::align_of::<A>()

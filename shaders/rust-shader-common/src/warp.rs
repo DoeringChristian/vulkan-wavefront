@@ -1,4 +1,5 @@
 use core::f32::consts::{E, PI};
+use spirv_std::num_traits::Float;
 
 // Porting from
 // https://github.com/mitsuba-renderer/mitsuba3/blob/152352f87b5baea985511b2a80d9f91c3c945a90/include/mitsuba/core/warp.h

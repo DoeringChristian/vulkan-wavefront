@@ -3,7 +3,7 @@ use rust_shader_common::*;
 use screen_13::prelude::*;
 use std::sync::Arc;
 
-use crate::buffer::TypedBuffer;
+use crate::array::Array;
 use crate::scene::Scene;
 
 const SHADER: &[u8] = include_bytes!(env!("rust_shaders.spv"));
@@ -32,8 +32,8 @@ impl IntersectionRenderer {
     pub fn record(
         &self,
         scene: &Scene,
-        rays: &TypedBuffer<Ray>,
-        hit_info: &TypedBuffer<HitInfo>,
+        rays: &Array<Ray>,
+        hit_info: &Array<HitInfo>,
         cache: &mut HashPool,
         rgraph: &mut RenderGraph,
     ) {
@@ -88,8 +88,8 @@ impl RayGenRenderer {
 
     pub fn record(
         &self,
-        rays: &TypedBuffer<Ray>,
-        sampler: &TypedBuffer<IndependentSampler>,
+        rays: &Array<Ray>,
+        sampler: &Array<IndependentSampler>,
         camera: Camera,
         seed: u32,
         spp: u32,

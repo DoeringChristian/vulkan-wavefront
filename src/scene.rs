@@ -1,5 +1,5 @@
 use crate::accel::{Blas, Tlas};
-use crate::buffer::TypedBuffer;
+use crate::array::Array;
 use bytemuck::{Pod, Zeroable};
 use russimp::scene::PostProcess;
 use russimp::Matrix4x4;
@@ -25,8 +25,8 @@ pub struct Instance {
 
 pub struct Scene {
     device: Arc<Device>,
-    pub positions: Arc<TypedBuffer<glam::Vec3>>,
-    pub indices: Arc<TypedBuffer<u32>>,
+    pub positions: Arc<Array<glam::Vec3>>,
+    pub indices: Arc<Array<u32>>,
     pub meshes: Vec<Mesh>,
     pub instances: Vec<Instance>,
     pub cameras: Vec<Camera>,
@@ -34,8 +34,8 @@ pub struct Scene {
     pub blases: Vec<Blas<glam::Vec3>>,
     pub tlas: Option<Tlas>,
 
-    pub instance_data: Option<Arc<TypedBuffer<InstanceData>>>,
-    pub mesh_data: Option<Arc<TypedBuffer<MeshData>>>,
+    pub instance_data: Option<Arc<Array<InstanceData>>>,
+    pub mesh_data: Option<Arc<Array<MeshData>>>,
 }
 
 fn matrix4x4_to_mat4(src: &Matrix4x4) -> glam::Mat4 {
@@ -152,14 +152,14 @@ impl Scene {
         Self {
             meshes,
             instances,
-            positions: Arc::new(TypedBuffer::create_from_slice(
+            positions: Arc::new(Array::from_slice(
                 device,
                 vk::BufferUsageFlags::STORAGE_BUFFER
                     | vk::BufferUsageFlags::SHADER_DEVICE_ADDRESS
                     | vk::BufferUsageFlags::ACCELERATION_STRUCTURE_BUILD_INPUT_READ_ONLY_KHR,
                 &positions,
             )),
-            indices: Arc::new(TypedBuffer::create_from_slice(
+            indices: Arc::new(Array::from_slice(
                 device,
                 vk::BufferUsageFlags::STORAGE_BUFFER
                     | vk::BufferUsageFlags::SHADER_DEVICE_ADDRESS
@@ -244,14 +244,14 @@ impl Scene {
 
         // Upload mesh and instance data
         self.mesh_data = Some(Arc::new(unsafe {
-            TypedBuffer::unsafe_create_from_slice(
+            Array::from_slice_mappable(
                 &self.device,
                 vk::BufferUsageFlags::STORAGE_BUFFER,
                 &mesh_data,
             )
         }));
         self.instance_data = Some(Arc::new(unsafe {
-            TypedBuffer::unsafe_create_from_slice(
+            Array::from_slice_mappable(
                 &self.device,
                 vk::BufferUsageFlags::STORAGE_BUFFER,
                 &instance_data,
@@ -275,10 +275,10 @@ impl Scene {
 
     pub fn ray_intersect(
         &mut self,
-        rays: TypedBuffer<Ray>,
+        rays: Array<Ray>,
         cache: &mut HashPool,
         rgraph: &mut RenderGraph,
-    ) -> TypedBuffer<HitInfo> {
+    ) -> Array<HitInfo> {
         todo!()
     }
 }

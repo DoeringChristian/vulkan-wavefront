@@ -10,14 +10,14 @@ use rust_shader_common::*;
 use screen_13::prelude::vk::BufferUsageFlags;
 use screen_13::prelude::*;
 
-use crate::buffer::TypedBuffer;
+use crate::array::Array;
 use crate::renderer::{IntersectionRenderer, RayGenRenderer};
 use crate::scene::Scene;
 
 //use self::array::Array;
 mod accel;
 //mod array;
-mod buffer;
+mod array;
 //mod dense_arena;
 //mod sbt;
 mod renderer;
@@ -45,7 +45,7 @@ fn main() {
     scene.update(&mut cache, &mut rgraph);
 
     let ray = unsafe {
-        TypedBuffer::unsafe_create_from_slice(
+        Array::from_slice_mappable(
             &sc13.device,
             vk::BufferUsageFlags::STORAGE_BUFFER,
             &vec![Ray::default(); 1 * 1],
@@ -53,7 +53,7 @@ fn main() {
     };
 
     let sampler = unsafe {
-        TypedBuffer::unsafe_create_from_slice(
+        Array::from_slice_mappable(
             &sc13.device,
             vk::BufferUsageFlags::STORAGE_BUFFER,
             &vec![IndependentSampler::default(); 1 * 1],
