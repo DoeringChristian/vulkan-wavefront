@@ -108,3 +108,18 @@ pub fn ray_intersect(
         }
     }
 }
+
+#[spirv(compute(threads(64)))]
+pub fn path_trace(
+    #[spirv(global_invocation_id)] idx3: glam::UVec3,
+    #[spirv(num_workgroups)] num: glam::UVec3,
+    #[spirv(storage_buffer, descriptor_set = 0, binding = 0)] indices: &[u32],
+    #[spirv(storage_buffer, descriptor_set = 0, binding = 1)] positions: &[u32],
+    #[spirv(storage_buffer, descriptor_set = 0, binding = 2)] meshes: &[MeshData],
+    #[spirv(storage_buffer, descriptor_set = 0, binding = 3)] instances: &[InstanceData],
+    #[spirv(uniform_constant, descriptor_set = 0, binding = 4)] accel: &AccelerationStructure,
+) {
+    let idx = idx3.x as usize * num.y as usize * num.z as usize
+        + idx3.y as usize * num.z as usize
+        + idx3.z as usize;
+}

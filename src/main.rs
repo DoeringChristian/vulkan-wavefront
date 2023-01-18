@@ -11,7 +11,6 @@ use screen_13::prelude::vk::BufferUsageFlags;
 use screen_13::prelude::*;
 
 use crate::array::Array;
-use crate::renderer::{IntersectionRenderer, RayGenRenderer};
 use crate::scene::Scene;
 
 //use self::array::Array;
@@ -36,7 +35,7 @@ fn main() {
         .unwrap();
 
     //let intersection_renderer = IntersectionRenderer::create(&sc13.device);
-    let raygen_renderer = RayGenRenderer::create(&sc13.device);
+    //let raygen_renderer = RayGenRenderer::create(&sc13.device);
 
     let mut cache = HashPool::new(&sc13.device);
     let mut rgraph = RenderGraph::new();
@@ -44,31 +43,16 @@ fn main() {
     let mut scene = Scene::load(&sc13.device, &Path::new("assets/scenes/default.fbx"));
     scene.update(&mut cache, &mut rgraph);
 
-    let ray = unsafe {
-        Array::from_slice_mappable(
-            &sc13.device,
-            vk::BufferUsageFlags::STORAGE_BUFFER,
-            &vec![Ray::default(); 1 * 1],
-        )
-    };
+    let ray = Array::from_slice_mappable(
+        &sc13.device,
+        vk::BufferUsageFlags::STORAGE_BUFFER,
+        &vec![Ray::default(); 1 * 1],
+    );
 
-    let sampler = unsafe {
-        Array::from_slice_mappable(
-            &sc13.device,
-            vk::BufferUsageFlags::STORAGE_BUFFER,
-            &vec![IndependentSampler::default(); 1 * 1],
-        )
-    };
-    raygen_renderer.record(
-        &ray,
-        &sampler,
-        scene.cameras[0],
-        0,
-        1,
-        1,
-        1,
-        &mut cache,
-        &mut rgraph,
+    let sampler = Array::from_slice_mappable(
+        &sc13.device,
+        vk::BufferUsageFlags::STORAGE_BUFFER,
+        &vec![IndependentSampler::default(); 1 * 1],
     );
 
     // let rays = vec![Ray::new(vec3(0., 0., 0.), vec3(-1., 0., 0.))];

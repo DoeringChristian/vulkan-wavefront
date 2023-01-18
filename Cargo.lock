@@ -2223,6 +2223,7 @@ dependencies = [
  "glam",
  "inline-spirv",
  "macaw",
+ "paste",
  "pretty_env_logger",
  "russimp",
  "rust-shader-common",

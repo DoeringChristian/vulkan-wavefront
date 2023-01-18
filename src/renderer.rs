@@ -1,6 +1,6 @@
-use crate::util;
 use rust_shader_common::*;
 use screen_13::prelude::*;
+use std::stringify;
 use std::sync::Arc;
 
 use crate::array::Array;
@@ -8,27 +8,36 @@ use crate::scene::Scene;
 
 const SHADER: &[u8] = include_bytes!(env!("rust_shaders.spv"));
 
-pub struct IntersectionRenderer {
-    ppl: Arc<ComputePipeline>,
-    device: Arc<Device>,
-}
-impl IntersectionRenderer {
-    pub fn create(device: &Arc<Device>) -> Self {
-        let ppl = Arc::new(
-            ComputePipeline::create(
-                &device,
-                ComputePipelineInfo::default(),
-                Shader::new_compute(SHADER).entry_name("ray_intersect".into()),
-            )
-            .unwrap(),
-        );
-
-        Self {
-            ppl,
-            device: device.clone(),
+macro_rules! renderer {
+    ($fname:ident => $sname:ident) => {
+        pub struct $sname {
+            ppl: Arc<ComputePipeline>,
+            device: Arc<Device>,
         }
-    }
 
+        impl $sname {
+            pub fn create(device: &Arc<Device>) -> Self {
+                let ppl = Arc::new(
+                    ComputePipeline::create(
+                        &device,
+                        ComputePipelineInfo::default(),
+                        Shader::new_compute(SHADER).entry_name(stringify!($fname).into()),
+                    )
+                    .unwrap(),
+                );
+
+                Self {
+                    ppl,
+                    device: device.clone(),
+                }
+            }
+        }
+    };
+}
+
+renderer!(path_trace => PTRenderer);
+
+impl PTRenderer {
     pub fn record(
         &self,
         scene: &Scene,
@@ -60,67 +69,6 @@ impl IntersectionRenderer {
             .write_descriptor((0, 6), hit_info_node)
             .record_compute(move |compute, _| {
                 compute.dispatch(count as u32, 1, 1);
-            })
-            .submit_pass();
-    }
-}
-
-pub struct RayGenRenderer {
-    ppl: Arc<ComputePipeline>,
-    device: Arc<Device>,
-}
-impl RayGenRenderer {
-    pub fn create(device: &Arc<Device>) -> Self {
-        let ppl = Arc::new(
-            ComputePipeline::create(
-                &device,
-                ComputePipelineInfo::default(),
-                Shader::new_compute(SHADER).entry_name("ray_gen".into()),
-            )
-            .unwrap(),
-        );
-
-        Self {
-            ppl,
-            device: device.clone(),
-        }
-    }
-
-    pub fn record(
-        &self,
-        rays: &Array<Ray>,
-        sampler: &Array<IndependentSampler>,
-        camera: Camera,
-        seed: u32,
-        spp: u32,
-        width: u32,
-        height: u32,
-        //spp: u32,
-        cache: &mut HashPool,
-        rgraph: &mut RenderGraph,
-    ) {
-        let count = rays.count();
-        assert!(count == sampler.count());
-        assert!((width * height * spp) as usize == count);
-
-        let ray_node = rgraph.bind_node(&rays.buf);
-        let sampler_node = rgraph.bind_node(&sampler.buf);
-        let push_constant = RgenPushConstant {
-            camera,
-            seed,
-            spp,
-            width,
-            height,
-        };
-
-        rgraph
-            .begin_pass("IntersectionRenderPass")
-            .bind_pipeline(&self.ppl)
-            .write_descriptor((0, 0), ray_node)
-            .write_descriptor((0, 1), sampler_node)
-            .record_compute(move |compute, _| {
-                compute.push_constants(unsafe { util::cast_slice(&[push_constant]) });
-                compute.dispatch(width, height, spp);
             })
             .submit_pass();
     }
