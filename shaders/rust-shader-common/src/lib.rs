@@ -26,10 +26,11 @@ pub use sensor::Sensor;
 #[derive(Clone)]
 #[repr(C)]
 pub struct Mesh {
-    pub indices: Range<u32>,
-    pub positions: Range<u32>,
-    pub normals: Range<u32>,
-    pub tangents: Range<u32>,
+    pub indices: u32,
+    pub triangle_count: u32,
+    pub positions: u32,
+    pub normals: u32,
+    pub tangents: u32,
 }
 
 #[derive(Clone)]

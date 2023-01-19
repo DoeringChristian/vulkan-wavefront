@@ -11,11 +11,11 @@ pub struct Blas<T> {
     // Not sure about the use of weaks.
     pub indices: Arc<Buffer>,
     pub positions: Arc<Buffer>,
-    triangle_count: usize,
+    primitive_count: usize,
+    //vertices_offset: usize,
     geometry_info: AccelerationStructureGeometryInfo,
     size: AccelerationStructureSize,
-    primitive_range: Range<usize>,
-    vertex_range: Range<usize>,
+    primitive_offset: usize,
     _ty: PhantomData<T>,
 }
 
@@ -38,10 +38,10 @@ impl<T> Blas<T> {
                 .unwrap(),
         );
 
-        let triangle_count = self.triangle_count;
+        let triangle_count = self.primitive_count;
         let geometry_info = self.geometry_info.clone();
-        let primitive_range = self.primitive_range.clone();
-        let vertex_range = self.vertex_range.clone();
+        let primitive_offset = self.primitive_offset;
+        let primitive_count = self.primitive_count;
 
         rgraph
             .begin_pass("Build BLAS")
@@ -56,7 +56,7 @@ impl<T> Blas<T> {
                     &geometry_info,
                     &[vk::AccelerationStructureBuildRangeInfoKHR {
                         first_vertex: 0,
-                        primitive_count: (primitive_range.end - primitive_range.start) as u32,
+                        primitive_count: primitive_count as u32,
                         primitive_offset: 0,
                         transform_offset: 0,
                     }],
@@ -67,33 +67,33 @@ impl<T> Blas<T> {
     pub fn create(
         device: &Arc<Device>,
         indices: &Array<u32>,
-        index_range: Range<usize>,
-        positions: &Array<T>,
-        positions_range: Range<usize>,
+        indices_offset: usize,
+        primitive_count: usize,
+        vertices: &Array<T>,
+        vertices_offset: usize,
     ) -> Self {
         //let triangle_count = geometry.indices.count() / 3;
-        let triangle_count = (index_range.end - index_range.start) as u64 / 3;
-        let vertex_count = positions.count() as u64;
-        let vertex_stride = positions.stride() as u64;
+        let vertex_count = vertices.count() as u64;
+        let vertex_stride = vertices.stride() as u64;
         //let vertex_count = geometry.positions.count();
 
         let geometry_info = AccelerationStructureGeometryInfo {
             ty: vk::AccelerationStructureTypeKHR::BOTTOM_LEVEL,
             flags: vk::BuildAccelerationStructureFlagsKHR::empty(),
             geometries: vec![AccelerationStructureGeometry {
-                max_primitive_count: triangle_count as _,
+                max_primitive_count: primitive_count as _,
                 flags: vk::GeometryFlagsKHR::OPAQUE,
                 geometry: AccelerationStructureGeometryData::Triangles {
                     index_data: DeviceOrHostAddress::DeviceAddress(
                         screen_13::prelude::Buffer::device_address(&indices)
-                            + (index_range.start * std::mem::size_of::<u32>()) as u64,
+                            + (indices_offset * std::mem::size_of::<u32>()) as u64,
                     ),
                     index_type: vk::IndexType::UINT32,
                     transform_data: None,
                     max_vertex: vertex_count as _,
                     vertex_data: DeviceOrHostAddress::DeviceAddress(
-                        screen_13::prelude::Buffer::device_address(&positions)
-                            + (positions_range.start * std::mem::size_of::<T>()) as u64,
+                        screen_13::prelude::Buffer::device_address(&vertices)
+                            + (vertices_offset * std::mem::size_of::<T>()) as u64,
                     ),
                     vertex_format: vk::Format::R32G32B32_SFLOAT,
                     vertex_stride: vertex_stride,
@@ -113,15 +113,11 @@ impl<T> Blas<T> {
             //geometry: gkey,
             accel: Arc::new(accel),
             indices: indices.buf.clone(),
-            positions: positions.buf.clone(),
+            positions: vertices.buf.clone(),
             geometry_info,
+            primitive_count,
             size: accel_size,
-            triangle_count: indices.count() / 3,
-            primitive_range: Range {
-                start: index_range.start / 3,
-                end: index_range.end / 3,
-            },
-            vertex_range: positions_range.clone(),
+            primitive_offset: indices_offset,
             _ty: PhantomData::default(),
         }
     }

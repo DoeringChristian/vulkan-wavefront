@@ -50,7 +50,7 @@ impl<'a> Scene<'a> {
                 let t = query.get_committed_intersection_t();
 
                 let instance_id = query.get_committed_intersection_instance_id();
-                let geometry_idx = query.get_committed_intersection_primitive_index();
+                let primitive_idx = query.get_committed_intersection_primitive_index();
 
                 let instance = &self.instances[instance_id as usize];
                 let mesh = &self.meshes[instance.mesh_idx as usize];
@@ -62,24 +62,29 @@ impl<'a> Scene<'a> {
 
                 // As slices are not supported yet I need to index manually
                 let triangle = uvec3(
-                    self.indices[mesh.indices.start as usize + geometry_idx as usize * 3 + 0],
-                    self.indices[mesh.indices.start as usize + geometry_idx as usize * 3 + 1],
-                    self.indices[mesh.indices.start as usize + geometry_idx as usize * 3 + 2],
+                    self.indices[mesh.indices as usize + primitive_idx as usize * 3 + 0],
+                    self.indices[mesh.indices as usize + primitive_idx as usize * 3 + 1],
+                    self.indices[mesh.indices as usize + primitive_idx as usize * 3 + 2],
                 );
 
-                let normal = self.normals[mesh.normals.start as usize + triangle.x as usize]
-                    * barycentric.x
-                    + self.normals[mesh.normals.start as usize + triangle.y as usize]
-                        * barycentric.y
-                    + self.normals[mesh.normals.start as usize + triangle.z as usize]
-                        * barycentric.z;
+                let p1 = self.positions[mesh.positions as usize + triangle.x as usize];
+                let p2 = self.positions[mesh.positions as usize + triangle.y as usize];
+                let p3 = self.positions[mesh.positions as usize + triangle.z as usize];
 
-                let tangent = self.tangents[mesh.tangents.start as usize + triangle.x as usize]
+                let normal = (p2 - p1).cross(p3 - p1).normalize();
+                let normal = p2 / 10.;
+
+                // let normal = self.normals[mesh.normals.start as usize + triangle.x as usize]
+                //     * barycentric.x
+                //     + self.normals[mesh.normals.start as usize + triangle.y as usize]
+                //         * barycentric.y
+                //     + self.normals[mesh.normals.start as usize + triangle.z as usize]
+                //         * barycentric.z;
+
+                let tangent = self.tangents[mesh.tangents as usize + triangle.x as usize]
                     * barycentric.x
-                    + self.tangents[mesh.tangents.start as usize + triangle.y as usize]
-                        * barycentric.y
-                    + self.tangents[mesh.tangents.start as usize + triangle.z as usize]
-                        * barycentric.z;
+                    + self.tangents[mesh.tangents as usize + triangle.y as usize] * barycentric.y
+                    + self.tangents[mesh.tangents as usize + triangle.z as usize] * barycentric.z;
 
                 let bitangent = normal.cross(tangent);
 

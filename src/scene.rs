@@ -118,10 +118,11 @@ impl Scene {
                 indices.push(face.0[2]);
             }
             meshes.push(Mesh {
-                indices: indices_offset as _..indices.len() as _,
-                positions: positions_offset as _..positions.len() as _,
-                normals: normals_offset as _..normals.len() as _,
-                tangents: tangents_offset as _..tangents.len() as _,
+                indices: indices_offset as _,
+                triangle_count: ((indices.len() - indices_offset) / 3) as _,
+                positions: positions_offset as _,
+                normals: normals_offset as _,
+                tangents: tangents_offset as _,
             })
         }
         let mut instances = vec![];
@@ -139,7 +140,6 @@ impl Scene {
             .iter()
             .map(|camera| {
                 let to_world = nodes[&camera.name].transform;
-                println!("{:#?}", to_world);
                 let fov_x = camera.horizontal_fov;
                 let aspect = camera.aspect;
                 let fov_y = ((fov_x / 2.).atan() / aspect).tan() * 2.;
@@ -189,9 +189,10 @@ impl Scene {
             self.blases.push(Blas::create(
                 &self.device,
                 &self.indices,
-                mesh.indices.start as _..mesh.indices.end as _,
+                mesh.indices as usize,
+                mesh.triangle_count as usize,
                 &self.positions,
-                mesh.indices.start as _..mesh.indices.end as _,
+                mesh.positions as usize,
             ))
         }
         // Transform instances into AccelerationStructureInstanceKHR types
@@ -236,12 +237,12 @@ impl Scene {
         let instance_data = self.instances.iter().cloned().collect::<Vec<_>>();
 
         // Upload mesh and instance data
-        self.mesh_data = Some(Array::from_slice_mappable(
+        self.mesh_data = Some(Array::from_slice(
             &self.device,
             vk::BufferUsageFlags::STORAGE_BUFFER,
             &mesh_data,
         ));
-        self.instance_data = Some(Array::from_slice_mappable(
+        self.instance_data = Some(Array::from_slice(
             &self.device,
             vk::BufferUsageFlags::STORAGE_BUFFER,
             &instance_data,
