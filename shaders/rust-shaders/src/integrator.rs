@@ -31,7 +31,7 @@ impl SimplePathIntegrator {
 
         let ray = sensor.sample_ray(adjusted_pos);
 
-        todo!()
+        self.sample(scene, &mut sampler, ray).extend(1.)
     }
 
     pub fn sample(&self, scene: &Scene, sampler: &mut IndependentSampler, ray: Ray3f) -> Vec3 {

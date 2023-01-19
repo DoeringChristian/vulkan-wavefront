@@ -55,24 +55,31 @@ impl<'a> Scene<'a> {
                 let instance = &self.instances[instance_id as usize];
                 let mesh = &self.meshes[instance.mesh_idx as usize];
 
-                let indices = &self.indices[mesh.indices.start as _..mesh.indices.end as _];
-                let positions = &self.positions[mesh.positions.start as _..mesh.positions.end as _];
-                let normals = &self.normals[mesh.normals.start as _..mesh.normals.end as _];
-                let tangents = &self.tangents[mesh.tangents.start as _..mesh.normals.end as _];
+                //let indices = &self.indices[mesh.indices.start as usize..mesh.indices.end as usize];
+                //let positions = &self.positions[mesh.positions.start as _..mesh.positions.end as _];
+                //let normals = &self.normals[mesh.normals.start as _..mesh.normals.end as _];
+                //let tangents = &self.tangents[mesh.tangents.start as _..mesh.normals.end as _];
 
+                // As slices are not supported yet I need to index manually
                 let triangle = uvec3(
-                    indices[geometry_idx as usize * 3 + 0],
-                    indices[geometry_idx as usize * 3 + 1],
-                    indices[geometry_idx as usize * 3 + 2],
+                    self.indices[mesh.indices.start as usize + geometry_idx as usize * 3 + 0],
+                    self.indices[mesh.indices.start as usize + geometry_idx as usize * 3 + 1],
+                    self.indices[mesh.indices.start as usize + geometry_idx as usize * 3 + 2],
                 );
 
-                let normal = normals[triangle.x as usize] * barycentric.x
-                    + normals[triangle.y as usize] * barycentric.y
-                    + normals[triangle.z as usize] * barycentric.z;
+                let normal = self.normals[mesh.normals.start as usize + triangle.x as usize]
+                    * barycentric.x
+                    + self.normals[mesh.normals.start as usize + triangle.y as usize]
+                        * barycentric.y
+                    + self.normals[mesh.normals.start as usize + triangle.z as usize]
+                        * barycentric.z;
 
-                let tangent = tangents[triangle.x as usize] * barycentric.x
-                    + tangents[triangle.y as usize] * barycentric.y
-                    + tangents[triangle.z as usize] * barycentric.z;
+                let tangent = self.tangents[mesh.tangents.start as usize + triangle.x as usize]
+                    * barycentric.x
+                    + self.tangents[mesh.tangents.start as usize + triangle.y as usize]
+                        * barycentric.y
+                    + self.tangents[mesh.tangents.start as usize + triangle.z as usize]
+                        * barycentric.z;
 
                 let bitangent = normal.cross(tangent);
 
@@ -89,8 +96,8 @@ impl<'a> Scene<'a> {
                 SurfaceInteraction3f {
                     t,
                     p: ray.o + ray.d * t,
-                    n: normal,
-                    tbn,
+                    //n: normal,
+                    //tbn,
                     barycentric,
                     instance_id: query.get_committed_intersection_instance_id(),
                     geometry_idx: query.get_committed_intersection_primitive_index(),

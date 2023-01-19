@@ -54,10 +54,20 @@ fn main() {
     }
 
     sc13.run(|frame| {
+        frame.render_graph.clear_color_image(frame.swapchain_image);
+        let img = cache
+            .lease(ImageInfo::new_2d(
+                vk::Format::R32G32B32A32_SFLOAT,
+                100,
+                100,
+                vk::ImageUsageFlags::STORAGE,
+            ))
+            .unwrap();
+        let img_node = frame.render_graph.bind_node(img);
         pt_renderer.record(
             &scene,
             glam::uvec3(100, 100, 8),
-            AnyImageNode::SwapchainImage(frame.swapchain_image),
+            AnyImageNode::ImageLease(img_node),
             0,
             &mut cache,
             frame.render_graph,
