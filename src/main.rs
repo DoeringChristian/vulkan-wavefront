@@ -46,6 +46,7 @@ fn main() {
     scene.update(&mut cache, &mut rgraph);
 
     let pt_renderer = PTRenderer::create(&sc13.device);
+    let presenter = screen_13_fx::GraphicPresenter::new(&sc13.device).unwrap();
 
     rgraph.resolve().submit(&mut cache, 0).unwrap();
 
@@ -60,18 +61,30 @@ fn main() {
                 vk::Format::R32G32B32A32_SFLOAT,
                 100,
                 100,
-                vk::ImageUsageFlags::STORAGE,
+                vk::ImageUsageFlags::STORAGE | vk::ImageUsageFlags::SAMPLED,
             ))
             .unwrap();
         let img_node = frame.render_graph.bind_node(img);
         pt_renderer.record(
             &scene,
             glam::uvec3(100, 100, 8),
-            AnyImageNode::ImageLease(img_node),
+            Some(Sensor::perspective(
+                glam::Mat4::look_at_rh(
+                    glam::vec3(0., 0., 0.),
+                    glam::vec3(1., 0., 0.),
+                    glam::vec3(0., 0., 1.),
+                ),
+                PI * 2. / 3.,
+                1.,
+                0.001,
+                10000.,
+            )),
             0,
+            AnyImageNode::ImageLease(img_node),
             &mut cache,
             frame.render_graph,
         );
+        presenter.present_image(frame.render_graph, img_node, frame.swapchain_image);
     })
     .unwrap();
 

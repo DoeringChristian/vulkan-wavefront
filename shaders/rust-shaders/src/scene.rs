@@ -96,8 +96,8 @@ impl<'a> Scene<'a> {
                 SurfaceInteraction3f {
                     t,
                     p: ray.o + ray.d * t,
-                    //n: normal,
-                    //tbn,
+                    n: normal,
+                    tbn,
                     barycentric,
                     instance_id: query.get_committed_intersection_instance_id(),
                     geometry_idx: query.get_committed_intersection_primitive_index(),

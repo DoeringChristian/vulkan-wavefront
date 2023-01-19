@@ -7,6 +7,7 @@ edition = "2021"
 
 [dependencies]
 screen-13 = { git = "https://github.com/DoeringChristian/screen-13.git", branch = "ray-query" }
+screen-13-fx = { git = "https://github.com/DoeringChristian/screen-13.git", branch = "ray-query" }
 pretty_env_logger = "0.4.0"
 inline-spirv = "0.1.5"
 glam = {version = "0.22", features = ["bytemuck"]}

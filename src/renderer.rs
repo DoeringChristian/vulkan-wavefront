@@ -43,11 +43,14 @@ impl PTRenderer {
         &self,
         scene: &Scene,
         size: glam::UVec3,
-        color: AnyImageNode,
+        sensor: Option<Sensor>,
         seed: u32,
+        color: impl Into<AnyImageNode>,
         cache: &mut HashPool,
         rgraph: &mut RenderGraph,
     ) {
+        let color = color.into();
+
         let indices_node = rgraph.bind_node(&scene.indices.buf);
         let positions_node = rgraph.bind_node(&scene.positions.buf);
         let normals_node = rgraph.bind_node(&scene.normals.buf);
@@ -57,7 +60,7 @@ impl PTRenderer {
         let accel_node = rgraph.bind_node(&scene.tlas.as_ref().unwrap().accel);
 
         let push_constants = PathTracePushConstant {
-            sensor: scene.sensors[0],
+            sensor: sensor.unwrap_or(scene.sensors[0]),
             seed,
         };
 

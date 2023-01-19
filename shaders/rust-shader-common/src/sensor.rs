@@ -21,9 +21,12 @@ impl Sensor {
         near_clip: f32,
         far_clip: f32,
     ) -> Self {
+        let to_view = Mat4::perspective_rh(fov_y, aspect_ratio, near_clip, far_clip);
+        let to_view = Mat4::from_translation(vec3(1., 1., 0.)) * to_view;
+        let to_view = Mat4::from_scale(vec3(0.5, 0.5, 1.)) * to_view;
         Self {
             to_world,
-            to_view: Mat4::perspective_rh(fov_y, aspect_ratio, near_clip, far_clip),
+            to_view,
             near_clip,
             far_clip,
             //size: glam::uvec2(width, height),

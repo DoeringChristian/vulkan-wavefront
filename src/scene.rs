@@ -86,7 +86,7 @@ impl Scene {
             vec![
                 PostProcess::CalculateTangentSpace,
                 PostProcess::Triangulate,
-                PostProcess::JoinIdenticalVertices,
+                //PostProcess::JoinIdenticalVertices,
                 PostProcess::SortByPrimitiveType,
             ],
         )

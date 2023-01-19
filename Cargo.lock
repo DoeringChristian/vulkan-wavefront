@@ -188,6 +188,12 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "0d8c1fef690941d3e7788d328517591fecc684c084084702d6ff1641e993699a"
 
 [[package]]
+name = "bmfont"
+version = "0.3.3"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "7464c178da64eeda8bdc1e70378593cba8e37a00a3846d593088db7a590ee3a3"
+
+[[package]]
 name = "bumpalo"
 version = "3.11.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1642,6 +1648,21 @@ dependencies = [
 ]
 
 [[package]]
+name = "screen-13-fx"
+version = "0.1.0"
+source = "git+https://github.com/DoeringChristian/screen-13.git?branch=ray-query#ae3f9c4c767a436497e564aa9da62b983faf3d74"
+dependencies = [
+ "anyhow",
+ "bmfont",
+ "bytemuck",
+ "glam",
+ "inline-spirv",
+ "lazy_static",
+ "parking_lot",
+ "screen-13",
+]
+
+[[package]]
 name = "sct"
 version = "0.7.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -2228,6 +2249,7 @@ dependencies = [
  "russimp",
  "rust-shader-common",
  "screen-13",
+ "screen-13-fx",
  "spirv-builder",
 ]
 
