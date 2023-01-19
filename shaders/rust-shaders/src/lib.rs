@@ -17,6 +17,7 @@ use spirv_std::ray_tracing::{
 use spirv_std::spirv;
 use spirv_std::{glam, Image};
 
+use self::integrator::SimplePathIntegrator;
 use self::scene::Scene;
 
 #[spirv(compute(threads(64)))]
@@ -50,4 +51,16 @@ pub fn path_trace(
         instances,
         accel,
     };
+
+    let integrator = SimplePathIntegrator::new();
+
+    let L = integrator.render(
+        &scene,
+        &push_constant.sensor,
+        push_constant.seed,
+        idx3,
+        size,
+    );
+
+    unsafe { color.write(uvec2(idx3.x, idx3.y), L) };
 }

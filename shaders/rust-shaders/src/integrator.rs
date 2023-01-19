@@ -7,6 +7,9 @@ use crate::scene::Scene;
 pub struct SimplePathIntegrator {}
 
 impl SimplePathIntegrator {
+    pub fn new() -> Self {
+        Self {}
+    }
     pub fn render(
         &self,
         scene: &Scene,
@@ -34,13 +37,14 @@ impl SimplePathIntegrator {
     pub fn sample(&self, scene: &Scene, sampler: &mut IndependentSampler, ray: Ray3f) -> Vec3 {
         let mut L = vec3(0., 0., 0.);
         let mut f = vec3(1., 1., 1.);
-        let active = true;
+        let mut active = true;
 
         while active {
             let s = scene.ray_intersect(&ray);
 
-            // Direct emission
+            L = s.n;
+            active = false;
         }
-        todo!()
+        return L;
     }
 }

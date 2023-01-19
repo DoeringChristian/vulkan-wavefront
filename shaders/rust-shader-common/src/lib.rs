@@ -53,9 +53,6 @@ pub struct HitInfo {
 #[derive(Copy, Clone)]
 #[repr(C, align(16))]
 pub struct PathTracePushConstant {
-    pub camera: Sensor,
+    pub sensor: Sensor,
     pub seed: u32,
-    pub spp: u32,
-    pub width: u32,
-    pub height: u32,
 }

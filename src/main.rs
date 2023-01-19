@@ -13,6 +13,8 @@ use screen_13::prelude::*;
 use crate::array::Array;
 use crate::scene::Scene;
 
+use self::renderer::PTRenderer;
+
 //use self::array::Array;
 mod accel;
 //mod array;
@@ -43,30 +45,25 @@ fn main() {
     let mut scene = Scene::load(&sc13.device, &Path::new("assets/scenes/default.fbx"));
     scene.update(&mut cache, &mut rgraph);
 
-    // let rays = vec![Ray::new(vec3(0., 0., 0.), vec3(-1., 0., 0.))];
-    // let rays = unsafe {
-    //     TypedBuffer::unsafe_create_from_slice(
-    //         &sc13.device,
-    //         vk::BufferUsageFlags::STORAGE_BUFFER,
-    //         &rays,
-    //     )
-    // };
-    // let hit_info = unsafe {
-    //     TypedBuffer::unsafe_create_mappable_from_slice(
-    //         &sc13.device,
-    //         vk::BufferUsageFlags::STORAGE_BUFFER,
-    //         &vec![HitInfo::default(); 1],
-    //     )
-    // };
-    //
-    // intersection_renderer.record(&scene, &rays, &hit_info, &mut cache, &mut rgraph);
+    let pt_renderer = PTRenderer::create(&sc13.device);
 
-    //println!("{:#?}", scene);
     rgraph.resolve().submit(&mut cache, 0).unwrap();
 
     unsafe {
         sc13.device.device_wait_idle().unwrap();
     }
+
+    sc13.run(|frame| {
+        pt_renderer.record(
+            &scene,
+            glam::uvec3(100, 100, 8),
+            AnyImageNode::SwapchainImage(frame.swapchain_image),
+            0,
+            &mut cache,
+            frame.render_graph,
+        );
+    })
+    .unwrap();
 
     // let rays: &[Ray] = unsafe { util::try_cast_slice(Buffer::mapped_slice(&ray)).unwrap() };
     // println!("{:#?}", rays);

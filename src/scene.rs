@@ -30,7 +30,7 @@ pub struct Scene {
 
     pub meshes: Vec<Mesh>,
     pub instances: Vec<Instance>,
-    pub cameras: Vec<Sensor>,
+    pub sensors: Vec<Sensor>,
 
     pub blases: Vec<Blas<glam::Vec3>>,
     pub tlas: Option<Tlas>,
@@ -172,7 +172,7 @@ impl Scene {
             ),
             normals: Array::from_slice(device, vk::BufferUsageFlags::STORAGE_BUFFER, &normals),
             tangents: Array::from_slice(device, vk::BufferUsageFlags::STORAGE_BUFFER, &tangents),
-            cameras,
+            sensors: cameras,
 
             device: device.clone(),
 
