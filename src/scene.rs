@@ -1,9 +1,8 @@
 use crate::accel::{Blas, Tlas};
 use crate::array::Array;
-use bytemuck::{Pod, Zeroable};
 use russimp::scene::PostProcess;
 use russimp::Matrix4x4;
-use rust_shader_common::emitter::{AreaEmitter, Emitter};
+use rust_shader_common::emitter::Emitter;
 use rust_shader_common::instance::Instance;
 use rust_shader_common::mesh::Mesh;
 use rust_shader_common::sensor::Sensor;
@@ -125,19 +124,6 @@ impl Scene {
                 indices.push(face.0[1]);
                 indices.push(face.0[2]);
             }
-            // let material = &scene.materials[mesh.material_index as usize];
-            // for property in material.properties.iter() {
-            //     if property.key == "$clr.emissive" {
-            //         if let russimp::material::PropertyTypeInfo::FloatArray(emissin) = &property.data
-            //         {
-            //             if emissin != &[0., 0., 0.] {
-            //                 emitters.push(Emitter::AreaEmitter(AreaEmitter {
-            //                     mesh: meshes.len() as u32,
-            //                 }));
-            //             }
-            //         }
-            //     }
-            // }
 
             meshes.push(Mesh {
                 indices: indices_offset as _,
@@ -148,9 +134,7 @@ impl Scene {
             })
         }
         let mut instances = vec![];
-        let mut emitters = vec![Emitter::Env {
-            irradiance: [0., 0., 0.],
-        }];
+        let mut emitters = vec![Emitter::env([1., 0., 0.])];
         let mut nodes = HashMap::new();
 
         load_nodes(
@@ -172,14 +156,15 @@ impl Scene {
                     let mut emitter = None;
                     for property in material.properties.iter() {
                         if property.key == "$clr.emissive" {
-                            if let russimp::material::PropertyTypeInfo::FloatArray(emissin) =
+                            if let russimp::material::PropertyTypeInfo::FloatArray(emission) =
                                 &property.data
                             {
-                                if emissin != &[0., 0., 0.] {
+                                if emission != &[0., 0., 0.] {
                                     emitter = Some(emitters.len() as u32);
-                                    emitters.push(Emitter::Area(AreaEmitter {
-                                        instance: instances.len() as u32,
-                                    }));
+                                    emitters.push(Emitter::area(
+                                        [emission[0], emission[1], emission[2]],
+                                        instances.len() as _,
+                                    ));
                                 }
                             }
                         }
