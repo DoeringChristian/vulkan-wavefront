@@ -4,6 +4,7 @@ use spirv_std::glam::*;
 pub struct SurfaceInteraction3f {
     pub p: Vec3, // Position of interaction
     pub n: Vec3, // Geometric Normal
+    pub wi: Vec3,
     pub barycentric: Vec3,
     pub tbn: Mat3,
     pub t: f32,

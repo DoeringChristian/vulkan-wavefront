@@ -102,10 +102,11 @@ impl<'a> Scene<'a> {
                     t,
                     p: ray.o + ray.d * t,
                     n: tbn.z_axis,
-                    //tbn,
+                    tbn,
                     barycentric,
                     instance_id,
                     geometry_idx: primitive_idx,
+                    wi: -ray.d,
                     valid: true,
                     ..Default::default()
                 }
