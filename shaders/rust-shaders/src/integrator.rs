@@ -44,9 +44,9 @@ impl SimplePathIntegrator {
         while active {
             let s = scene.ray_intersect(&ray);
 
-            //L = vec3(s.valid as u32 as f32, 0., 0.);
+            L = vec3(s.valid as u32 as f32, 0., 0.);
             //L = vec3(s.n.length(), 0., 0.);
-            L = s.n;
+            //L = vec3(s.n.length(), 0., 0.);
             active = false;
         }
         //L = ray.d;

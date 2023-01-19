@@ -22,9 +22,9 @@ use std::sync::Arc;
 
 pub struct Scene {
     device: Arc<Device>,
-    pub positions: Array<glam::Vec3>,
-    pub normals: Array<glam::Vec3>,
-    pub tangents: Array<glam::Vec3>,
+    pub positions: Array<[f32; 3]>,
+    pub normals: Array<[f32; 3]>,
+    pub tangents: Array<[f32; 3]>,
     //pub uvs: Array<glam::Vec3>,
     pub indices: Array<u32>,
 
@@ -32,7 +32,7 @@ pub struct Scene {
     pub instances: Vec<Instance>,
     pub sensors: Vec<Sensor>,
 
-    pub blases: Vec<Blas<glam::Vec3>>,
+    pub blases: Vec<Blas<[f32; 3]>>,
     pub tlas: Option<Tlas>,
 
     pub instance_data: Option<Array<Instance>>,
@@ -100,15 +100,15 @@ impl Scene {
         for mesh in scene.meshes.iter() {
             let positions_offset = positions.len();
             for v in mesh.vertices.iter() {
-                positions.push(glam::vec3(v.x, v.y, v.z));
+                positions.push([v.x, v.y, v.z]);
             }
             let normals_offset = normals.len();
             for n in mesh.normals.iter() {
-                normals.push(glam::vec3(n.x, n.y, n.z))
+                normals.push([n.x, n.y, n.z]);
             }
             let tangents_offset = tangents.len();
             for t in mesh.tangents.iter() {
-                tangents.push(glam::vec3(t.x, t.y, t.z));
+                tangents.push([t.x, t.y, t.z]);
             }
 
             let indices_offset = indices.len();

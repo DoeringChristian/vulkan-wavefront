@@ -1,4 +1,5 @@
 use rust_shader_common::{Instance, Mesh, Ray3f};
+use spirv_std::arch::IndexUnchecked;
 use spirv_std::glam::*;
 use spirv_std::ray_tracing::{
     AccelerationStructure, CandidateIntersection, CommittedIntersection, RayFlags, RayQuery,
@@ -8,9 +9,9 @@ use crate::interaction::SurfaceInteraction3f;
 
 pub struct Scene<'a> {
     pub indices: &'a [u32],
-    pub positions: &'a [Vec3],
-    pub normals: &'a [Vec3],
-    pub tangents: &'a [Vec3],
+    pub positions: &'a [[f32; 3]],
+    pub normals: &'a [[f32; 3]],
+    pub tangents: &'a [[f32; 3]],
     pub meshes: &'a [Mesh],
     pub instances: &'a [Instance],
     pub accel: &'a AccelerationStructure,
@@ -55,36 +56,35 @@ impl<'a> Scene<'a> {
                 let instance = &self.instances[instance_id as usize];
                 let mesh = &self.meshes[instance.mesh_idx as usize];
 
-                //let indices = &self.indices[mesh.indices.start as usize..mesh.indices.end as usize];
-                //let positions = &self.positions[mesh.positions.start as _..mesh.positions.end as _];
-                //let normals = &self.normals[mesh.normals.start as _..mesh.normals.end as _];
-                //let tangents = &self.tangents[mesh.tangents.start as _..mesh.normals.end as _];
-
-                // As slices are not supported yet I need to index manually
+                //// As slices are not supported yet. We need to index manually
                 let triangle = uvec3(
                     self.indices[mesh.indices as usize + primitive_idx as usize * 3 + 0],
                     self.indices[mesh.indices as usize + primitive_idx as usize * 3 + 1],
                     self.indices[mesh.indices as usize + primitive_idx as usize * 3 + 2],
                 );
 
-                let p1 = self.positions[mesh.positions as usize + triangle.x as usize];
-                let p2 = self.positions[mesh.positions as usize + triangle.y as usize];
-                let p3 = self.positions[mesh.positions as usize + triangle.z as usize];
+                let p1 =
+                    Vec3::from_array(self.positions[mesh.positions as usize + triangle.x as usize]);
+                let p2 =
+                    Vec3::from_array(self.positions[mesh.positions as usize + triangle.y as usize]);
+                let p3 =
+                    Vec3::from_array(self.positions[mesh.positions as usize + triangle.z as usize]);
+
+                let p1 = instance.transform.transform_point3(p1);
+                let p2 = instance.transform.transform_point3(p2);
+                let p3 = instance.transform.transform_point3(p3);
 
                 let normal = (p2 - p1).cross(p3 - p1).normalize();
-                let normal = p2 / 10.;
 
-                // let normal = self.normals[mesh.normals.start as usize + triangle.x as usize]
-                //     * barycentric.x
-                //     + self.normals[mesh.normals.start as usize + triangle.y as usize]
-                //         * barycentric.y
-                //     + self.normals[mesh.normals.start as usize + triangle.z as usize]
-                //         * barycentric.z;
-
-                let tangent = self.tangents[mesh.tangents as usize + triangle.x as usize]
-                    * barycentric.x
-                    + self.tangents[mesh.tangents as usize + triangle.y as usize] * barycentric.y
-                    + self.tangents[mesh.tangents as usize + triangle.z as usize] * barycentric.z;
+                let tangent =
+                    Vec3::from_array(self.tangents[mesh.tangents as usize + triangle.x as usize])
+                        * barycentric.x
+                        + Vec3::from_array(
+                            self.tangents[mesh.tangents as usize + triangle.y as usize],
+                        ) * barycentric.y
+                        + Vec3::from_array(
+                            self.tangents[mesh.tangents as usize + triangle.z as usize],
+                        ) * barycentric.z;
 
                 let bitangent = normal.cross(tangent);
 
@@ -101,11 +101,11 @@ impl<'a> Scene<'a> {
                 SurfaceInteraction3f {
                     t,
                     p: ray.o + ray.d * t,
-                    n: normal,
-                    tbn,
+                    n: tbn.z_axis,
+                    //tbn,
                     barycentric,
-                    instance_id: query.get_committed_intersection_instance_id(),
-                    geometry_idx: query.get_committed_intersection_primitive_index(),
+                    instance_id,
+                    geometry_idx: primitive_idx,
                     valid: true,
                     ..Default::default()
                 }

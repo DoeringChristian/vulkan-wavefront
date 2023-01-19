@@ -21,9 +21,13 @@ impl Sensor {
         near_clip: f32,
         far_clip: f32,
     ) -> Self {
-        let to_view = Mat4::perspective_rh(fov_y, aspect_ratio, near_clip, far_clip);
+        let to_view = Mat4::perspective_lh(fov_y, aspect_ratio, near_clip, far_clip);
         let to_view = Mat4::from_translation(vec3(1., 1., 0.)) * to_view;
         let to_view = Mat4::from_scale(vec3(0.5, 0.5, 1.)) * to_view;
+        #[cfg(not(target_arch = "spirv"))]
+        {
+            //println!("{:#?}", to_view);
+        }
         Self {
             to_world,
             to_view,
@@ -45,9 +49,7 @@ impl Sensor {
         let d = near_p.normalize();
 
         ray.o = o;
-        ray.d = (self.to_world * near_p.normalize().extend(0.))
-            .normalize()
-            .xyz();
+        ray.d = (self.to_world * d.extend(0.)).xyz().normalize();
 
         let near_t = self.near_clip / -d.z;
         let far_t = self.far_clip / -d.z;
