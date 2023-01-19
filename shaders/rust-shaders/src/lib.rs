@@ -49,6 +49,7 @@ pub fn path_trace(
         tangents,
         meshes,
         instances,
+        emitters,
         accel,
     };
 

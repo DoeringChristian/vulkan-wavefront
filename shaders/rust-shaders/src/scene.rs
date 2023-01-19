@@ -1,3 +1,4 @@
+use rust_shader_common::emitter::Emitter;
 use rust_shader_common::instance::Instance;
 use rust_shader_common::mesh::Mesh;
 use rust_shader_common::ray::Ray3f;
@@ -16,6 +17,7 @@ pub struct GPUScene<'a> {
     pub tangents: &'a [[f32; 3]],
     pub meshes: &'a [Mesh],
     pub instances: &'a [Instance],
+    pub emitters: &'a [Emitter],
     pub accel: &'a AccelerationStructure,
 }
 
@@ -135,6 +137,21 @@ impl<'a> Scene for GPUScene<'a> {
                 ray.tmax,
             );
             query.proceed()
+        }
+    }
+    fn eval_texture(&self, texture: u32, uv: Vec2) -> Vec3 {
+        unimplemented!()
+    }
+    fn emitter(&self, si: &SurfaceInteraction3f) -> Emitter {
+        if si.valid {
+            let instance = &self.instances[si.instance_id as usize];
+            if instance.emitter == 0 {
+                Emitter::none()
+            } else {
+                self.emitters[instance.emitter as usize]
+            }
+        } else {
+            self.emitters[0]
         }
     }
 }

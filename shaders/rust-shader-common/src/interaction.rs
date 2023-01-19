@@ -1,10 +1,14 @@
 use spirv_std::glam::*;
 
+use crate::instance::Instance;
+use crate::scene::Scene;
+
 #[derive(Default)]
 pub struct SurfaceInteraction3f {
     pub p: Vec3, // Position of interaction
     pub n: Vec3, // Geometric Normal
     pub wi: Vec3,
+    pub uv: Vec2,
     pub barycentric: Vec3,
     pub tbn: Mat3,
     pub t: f32,

@@ -6,6 +6,7 @@ use rust_shader_common::emitter::Emitter;
 use rust_shader_common::instance::Instance;
 use rust_shader_common::mesh::Mesh;
 use rust_shader_common::sensor::Sensor;
+use rust_shader_common::texture::Texture;
 use screen_13::prelude::*;
 use std::cell::RefCell;
 use std::collections::HashMap;
@@ -134,7 +135,7 @@ impl Scene {
             })
         }
         let mut instances = vec![];
-        let mut emitters = vec![Emitter::env([1., 0., 0.])];
+        let mut emitters = vec![Emitter::env(Texture::constant(glam::vec3(0.1, 0.1, 0.1)))];
         let mut nodes = HashMap::new();
 
         load_nodes(
@@ -162,7 +163,11 @@ impl Scene {
                                 if emission != &[0., 0., 0.] {
                                     emitter = Some(emitters.len() as u32);
                                     emitters.push(Emitter::area(
-                                        [emission[0], emission[1], emission[2]],
+                                        Texture::constant(glam::vec3(
+                                            emission[0],
+                                            emission[1],
+                                            emission[2],
+                                        )),
                                         instances.len() as _,
                                     ));
                                 }
