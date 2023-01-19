@@ -1,5 +1,7 @@
-use rust_shader_common::{Instance, Mesh, Ray3f};
-use spirv_std::arch::IndexUnchecked;
+use rust_shader_common::instance::Instance;
+use rust_shader_common::mesh::Mesh;
+use rust_shader_common::ray::Ray3f;
+use rust_shader_common::scene::Scene;
 use spirv_std::glam::*;
 use spirv_std::ray_tracing::{
     AccelerationStructure, CandidateIntersection, CommittedIntersection, RayFlags, RayQuery,
@@ -7,7 +9,7 @@ use spirv_std::ray_tracing::{
 
 use crate::interaction::SurfaceInteraction3f;
 
-pub struct Scene<'a> {
+pub struct GPUScene<'a> {
     pub indices: &'a [u32],
     pub positions: &'a [[f32; 3]],
     pub normals: &'a [[f32; 3]],
@@ -17,8 +19,8 @@ pub struct Scene<'a> {
     pub accel: &'a AccelerationStructure,
 }
 
-impl<'a> Scene<'a> {
-    pub fn ray_intersect(&self, ray: &Ray3f) -> SurfaceInteraction3f {
+impl<'a> Scene for GPUScene<'a> {
+    fn ray_intersect(&self, ray: &Ray3f) -> SurfaceInteraction3f {
         unsafe {
             spirv_std::ray_query!(let mut query);
             query.initialize(
@@ -120,7 +122,7 @@ impl<'a> Scene<'a> {
             }
         }
     }
-    pub fn ray_test(&self, ray: &Ray3f) -> bool {
+    fn ray_test(&self, ray: &Ray3f) -> bool {
         unsafe {
             spirv_std::ray_query!(let mut query);
             query.initialize(

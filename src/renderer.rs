@@ -1,4 +1,5 @@
-use rust_shader_common::*;
+use rust_shader_common::push_constants::PathTracePushConstant;
+use rust_shader_common::sensor::Sensor;
 use screen_13::prelude::*;
 use std::stringify;
 use std::sync::Arc;

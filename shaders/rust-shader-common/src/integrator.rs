@@ -1,9 +1,8 @@
-use rust_shader_common::ray::Ray3f;
-use rust_shader_common::sensor::Sensor;
+use crate::scene::Scene;
+use crate::{ray::Ray3f, sensor::Sensor};
 use spirv_std::glam::*;
 
 use crate::sampler::IndependentSampler;
-use crate::scene::GPUScene;
 
 pub struct SimplePathIntegrator {}
 
@@ -13,7 +12,7 @@ impl SimplePathIntegrator {
     }
     pub fn render(
         &self,
-        scene: &GPUScene,
+        scene: &impl Scene,
         sensor: &Sensor,
         seed: u32,
         idx3: UVec3,
@@ -37,7 +36,7 @@ impl SimplePathIntegrator {
         L
     }
 
-    pub fn sample(&self, scene: &GPUScene, sampler: &mut IndependentSampler, ray: Ray3f) -> Vec3 {
+    pub fn sample(&self, scene: &impl Scene, sampler: &mut IndependentSampler, ray: Ray3f) -> Vec3 {
         let mut L = vec3(0., 0., 0.);
         let mut f = vec3(1., 1., 1.);
         let mut active = true;

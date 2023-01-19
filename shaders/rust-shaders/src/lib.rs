@@ -1,14 +1,12 @@
 #![no_std]
 #![cfg_attr(target_arch = "spirv", feature(asm_experimental_arch,))]
 
-mod integrator;
-mod interaction;
-mod rand;
-mod sampler;
 mod scene;
-mod warp;
 
+use rust_shader_common::instance::Instance;
+use rust_shader_common::mesh::Mesh;
 //use bytemuck::{Pod, Zeroable};
+use rust_shader_common::push_constants::PathTracePushConstant;
 use rust_shader_common::*;
 use spirv_std::glam::*;
 use spirv_std::ray_tracing::{
@@ -18,7 +16,7 @@ use spirv_std::spirv;
 use spirv_std::{glam, Image};
 
 use self::integrator::SimplePathIntegrator;
-use self::scene::Scene;
+use self::scene::GPUScene;
 
 #[spirv(compute(threads(64)))]
 pub fn path_trace(
@@ -42,7 +40,7 @@ pub fn path_trace(
         + idx3.y as usize * size.z as usize
         + idx3.z as usize;
 
-    let scene = Scene {
+    let scene = GPUScene {
         indices,
         positions,
         normals,

@@ -1,16 +1,10 @@
 use std::f32::consts::PI;
 use std::path::Path;
-use std::sync::Arc;
 
 //use buffer::Buffer;
-use bytemuck::cast_slice;
-use glam::f32::vec3;
-use glam::uvec2;
-use rust_shader_common::*;
-use screen_13::prelude::vk::BufferUsageFlags;
+use rust_shader_common::sensor::Sensor;
 use screen_13::prelude::*;
 
-use crate::array::Array;
 use crate::scene::Scene;
 
 use self::renderer::PTRenderer;

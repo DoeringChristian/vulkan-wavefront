@@ -1,59 +1,14 @@
 #![cfg_attr(target_arch = "spirv", no_std, feature(asm_experimental_arch,))]
 
-use core::ops::Range;
-
-//use bytemuck::{Pod, Zeroable};
-use spirv_std::glam;
-use spirv_std::glam::Vec4Swizzles;
-
-mod ray;
-mod sensor;
-//mod path;
-//mod pcg;
-//mod rand;
-//mod ray;
-//mod sampler;
-//mod warp;
-
-pub use ray::Ray3f;
-pub use sensor::Sensor;
-//pub use path::PathCtx;
-//pub use pcg::PCG;
-//pub use rand::sample_tea_32;
-//pub use ray::Ray;
-//pub use sampler::IndependentSampler;
-
-#[derive(Clone)]
-#[repr(C)]
-pub struct Mesh {
-    pub indices: u32,
-    pub triangle_count: u32,
-    pub positions: u32,
-    pub normals: u32,
-    pub tangents: u32,
-}
-
-#[derive(Clone)]
-#[repr(C)]
-pub struct Instance {
-    pub transform: glam::Mat4,
-    pub mesh_idx: usize,
-}
-
-#[cfg_attr(not(target_arch = "spirv"), derive(Debug))]
-#[derive(Copy, Clone, Default)]
-#[repr(C, align(16))]
-pub struct HitInfo {
-    pub p: glam::Vec4,
-    pub t: f32,
-    pub instance_id: u32,
-    pub geometry_index: u32,
-    pub valid: u32,
-}
-
-#[derive(Copy, Clone)]
-#[repr(C, align(16))]
-pub struct PathTracePushConstant {
-    pub sensor: Sensor,
-    pub seed: u32,
-}
+pub mod emitter;
+pub mod instance;
+pub mod integrator;
+pub mod interaction;
+pub mod material;
+pub mod mesh;
+pub mod push_constants;
+pub mod rand;
+pub mod ray;
+pub mod sampler;
+pub mod scene;
+pub mod sensor;
