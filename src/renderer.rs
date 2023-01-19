@@ -58,6 +58,7 @@ impl PTRenderer {
         let tangents_node = rgraph.bind_node(&scene.tangents.buf);
         let mesh_data_node = rgraph.bind_node(&scene.mesh_data.as_ref().unwrap().buf);
         let instance_data_node = rgraph.bind_node(&scene.instance_data.as_ref().unwrap().buf);
+        let emitter_data_node = rgraph.bind_node(&scene.emitter_data.as_ref().unwrap().buf);
         let accel_node = rgraph.bind_node(&scene.tlas.as_ref().unwrap().accel);
 
         let push_constants = PathTracePushConstant {
@@ -74,8 +75,9 @@ impl PTRenderer {
             .read_descriptor((0, 3), tangents_node)
             .read_descriptor((0, 4), mesh_data_node)
             .read_descriptor((0, 5), instance_data_node)
-            .read_descriptor((0, 6), accel_node)
-            .read_descriptor((0, 7), color)
+            .read_descriptor((0, 6), emitter_data_node)
+            .read_descriptor((0, 7), accel_node)
+            .read_descriptor((0, 8), color)
             .record_compute(move |compute, _| {
                 compute.push_constants(unsafe { cast_slice(&[push_constants]) });
                 compute.dispatch(size.x, size.y, size.z);

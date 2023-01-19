@@ -2,10 +2,11 @@ use spirv_std::glam::*;
 
 #[derive(Clone, Copy)]
 pub enum Emitter {
-    AreaEmitter(AreaEmitter),
+    Area(AreaEmitter),
+    Env { irradiance: [f32; 3] },
 }
 
 #[derive(Clone, Copy)]
 pub struct AreaEmitter {
-    pub mesh: u32,
+    pub instance: u32,
 }

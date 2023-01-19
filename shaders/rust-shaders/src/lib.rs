@@ -3,6 +3,7 @@
 
 mod scene;
 
+use rust_shader_common::emitter::Emitter;
 use rust_shader_common::instance::Instance;
 use rust_shader_common::mesh::Mesh;
 //use bytemuck::{Pod, Zeroable};
@@ -29,8 +30,9 @@ pub fn path_trace(
     #[spirv(storage_buffer, descriptor_set = 0, binding = 3)] tangents: &[[f32; 3]],
     #[spirv(storage_buffer, descriptor_set = 0, binding = 4)] meshes: &[Mesh],
     #[spirv(storage_buffer, descriptor_set = 0, binding = 5)] instances: &[Instance],
-    #[spirv(uniform_constant, descriptor_set = 0, binding = 6)] accel: &AccelerationStructure,
-    #[spirv(uniform_constant, descriptor_set = 0, binding = 7)] color: &mut Image!(
+    #[spirv(storage_buffer, descriptor_set = 0, binding = 6)] emitters: &[Emitter],
+    #[spirv(uniform_constant, descriptor_set = 0, binding = 7)] accel: &AccelerationStructure,
+    #[spirv(uniform_constant, descriptor_set = 0, binding = 8)] color: &mut Image!(
         2D,
         format = rgba32f,
         sampled = false

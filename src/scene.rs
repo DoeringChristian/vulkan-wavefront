@@ -3,6 +3,7 @@ use crate::array::Array;
 use bytemuck::{Pod, Zeroable};
 use russimp::scene::PostProcess;
 use russimp::Matrix4x4;
+use rust_shader_common::emitter::{AreaEmitter, Emitter};
 use rust_shader_common::instance::Instance;
 use rust_shader_common::mesh::Mesh;
 use rust_shader_common::sensor::Sensor;
@@ -27,18 +28,20 @@ pub struct Scene {
     pub positions: Array<[f32; 3]>,
     pub normals: Array<[f32; 3]>,
     pub tangents: Array<[f32; 3]>,
-    //pub uvs: Array<glam::Vec3>,
     pub indices: Array<u32>,
 
     pub meshes: Vec<Mesh>,
     pub instances: Vec<Instance>,
     pub sensors: Vec<Sensor>,
-
+    pub emitters: Vec<Emitter>,
+    // pub materials: Vec<Material>,
     pub blases: Vec<Blas<[f32; 3]>>,
     pub tlas: Option<Tlas>,
 
     pub instance_data: Option<Array<Instance>>,
     pub mesh_data: Option<Array<Mesh>>,
+    pub emitter_data: Option<Array<Emitter>>,
+    // pub material_data: Option<Array<Material>>,
 }
 
 fn matrix4x4_to_mat4(src: &Matrix4x4) -> glam::Mat4 {
@@ -53,31 +56,34 @@ pub struct Node {
     pub transform: glam::Mat4,
 }
 
-fn load_nodes(
-    instances: &mut Vec<Instance>,
-    nodes: &mut HashMap<String, Node>,
+fn load_nodes<F: FnMut(&Rc<RefCell<russimp::node::Node>>, glam::Mat4)>(
+    //instances: &mut Vec<Instance>,
+    //nodes: &mut HashMap<String, Node>,
     node: &Rc<RefCell<russimp::node::Node>>,
     transform: glam::Mat4,
+    f: &mut F,
 ) {
     let transform = transform * matrix4x4_to_mat4(&node.borrow().transformation);
 
-    nodes.insert(
-        node.borrow().name.clone(),
-        Node {
-            node: node.clone(),
-            transform,
-        },
-    );
+    f(node, transform);
 
-    for mesh in node.borrow().meshes.iter() {
-        instances.push(Instance {
-            transform,
-            mesh_idx: *mesh as _,
-        })
-    }
+    // nodes.insert(
+    //     node.borrow().name.clone(),
+    //     Node {
+    //         node: node.clone(),
+    //         transform,
+    //     },
+    // );
+    //
+    // for mesh in node.borrow().meshes.iter() {
+    //     instances.push(Instance {
+    //         transform,
+    //         mesh_idx: *mesh as _,
+    //     })
+    // }
 
     for child in node.borrow().children.iter() {
-        load_nodes(instances, nodes, &child, transform);
+        load_nodes(child, transform, f);
     }
 }
 
@@ -119,6 +125,20 @@ impl Scene {
                 indices.push(face.0[1]);
                 indices.push(face.0[2]);
             }
+            // let material = &scene.materials[mesh.material_index as usize];
+            // for property in material.properties.iter() {
+            //     if property.key == "$clr.emissive" {
+            //         if let russimp::material::PropertyTypeInfo::FloatArray(emissin) = &property.data
+            //         {
+            //             if emissin != &[0., 0., 0.] {
+            //                 emitters.push(Emitter::AreaEmitter(AreaEmitter {
+            //                     mesh: meshes.len() as u32,
+            //                 }));
+            //             }
+            //         }
+            //     }
+            // }
+
             meshes.push(Mesh {
                 indices: indices_offset as _,
                 triangle_count: ((indices.len() - indices_offset) / 3) as _,
@@ -128,16 +148,52 @@ impl Scene {
             })
         }
         let mut instances = vec![];
+        let mut emitters = vec![Emitter::Env {
+            irradiance: [0., 0., 0.],
+        }];
         let mut nodes = HashMap::new();
 
         load_nodes(
-            &mut instances,
-            &mut nodes,
             &scene.root.as_ref().unwrap(),
             glam::Mat4::IDENTITY,
+            &mut |node, transform| {
+                nodes.insert(
+                    node.borrow().name.clone(),
+                    Node {
+                        node: node.clone(),
+                        transform,
+                    },
+                );
+
+                for mesh_idx in node.borrow().meshes.iter() {
+                    // add emitters
+                    let mesh = &scene.meshes[*mesh_idx as usize];
+                    let material = &scene.materials[mesh.material_index as usize];
+                    let mut emitter = None;
+                    for property in material.properties.iter() {
+                        if property.key == "$clr.emissive" {
+                            if let russimp::material::PropertyTypeInfo::FloatArray(emissin) =
+                                &property.data
+                            {
+                                if emissin != &[0., 0., 0.] {
+                                    emitter = Some(emitters.len() as u32);
+                                    emitters.push(Emitter::Area(AreaEmitter {
+                                        instance: instances.len() as u32,
+                                    }));
+                                }
+                            }
+                        }
+                    }
+                    instances.push(Instance {
+                        transform,
+                        mesh_idx: *mesh_idx as u32,
+                        emitter: emitter.unwrap_or(0),
+                    });
+                }
+            },
         );
 
-        let cameras = scene
+        let sensors = scene
             .cameras
             .iter()
             .map(|camera| {
@@ -158,6 +214,9 @@ impl Scene {
         Self {
             meshes,
             instances,
+            emitters,
+            sensors,
+
             positions: Array::from_slice(
                 device,
                 vk::BufferUsageFlags::STORAGE_BUFFER
@@ -174,20 +233,20 @@ impl Scene {
             ),
             normals: Array::from_slice(device, vk::BufferUsageFlags::STORAGE_BUFFER, &normals),
             tangents: Array::from_slice(device, vk::BufferUsageFlags::STORAGE_BUFFER, &tangents),
-            sensors: cameras,
-
-            device: device.clone(),
 
             blases: vec![],
             tlas: None,
             mesh_data: None,
             instance_data: None,
+            emitter_data: None,
+
+            device: device.clone(),
         }
     }
     pub fn update(&mut self, cache: &mut HashPool, rgraph: &mut RenderGraph) {
         // Create blases
         for instance in self.instances.iter() {
-            let mesh = &self.meshes[instance.mesh_idx];
+            let mesh = &self.meshes[instance.mesh_idx as usize];
             self.blases.push(Blas::create(
                 &self.device,
                 &self.indices,
@@ -233,21 +292,21 @@ impl Scene {
         // Create tlas from instances
         self.tlas = Tlas::create(&self.device, &instances);
 
-        // Turn meshs and instances into mesh_data and instance_data
-        let mesh_data = self.meshes.iter().cloned().collect::<Vec<_>>();
-
-        let instance_data = self.instances.iter().cloned().collect::<Vec<_>>();
-
         // Upload mesh and instance data
         self.mesh_data = Some(Array::from_slice(
             &self.device,
             vk::BufferUsageFlags::STORAGE_BUFFER,
-            &mesh_data,
+            &self.meshes,
         ));
         self.instance_data = Some(Array::from_slice(
             &self.device,
             vk::BufferUsageFlags::STORAGE_BUFFER,
-            &instance_data,
+            &self.instances,
+        ));
+        self.emitter_data = Some(Array::from_slice(
+            &self.device,
+            vk::BufferUsageFlags::STORAGE_BUFFER,
+            &self.emitters,
         ));
 
         // Build blas and tlas
