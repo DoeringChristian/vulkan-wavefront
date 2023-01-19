@@ -1,6 +1,7 @@
 use spirv_std::glam::*;
 
 use crate::instance::Instance;
+use crate::ray::Ray3f;
 use crate::scene::Scene;
 
 #[derive(Default)]
@@ -23,5 +24,13 @@ impl SurfaceInteraction3f {
     }
     pub fn to_world(&self, local_p: Vec3) -> Vec3 {
         self.tbn * local_p
+    }
+    pub fn spawn_ray(&self, wo: Vec3) -> Ray3f {
+        Ray3f {
+            o: self.p,
+            d: wo,
+            tmin: 0.001,
+            tmax: 10000.,
+        }
     }
 }

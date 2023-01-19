@@ -3,11 +3,13 @@
 
 mod scene;
 
+use rust_shader_common::bsdf::DiffuseBsdf;
 use rust_shader_common::emitter::Emitter;
 use rust_shader_common::instance::Instance;
 use rust_shader_common::mesh::Mesh;
 //use bytemuck::{Pod, Zeroable};
 use rust_shader_common::push_constants::PathTracePushConstant;
+use rust_shader_common::scene::Scene;
 use rust_shader_common::*;
 use spirv_std::glam::*;
 use spirv_std::ray_tracing::{
@@ -31,8 +33,9 @@ pub fn path_trace(
     #[spirv(storage_buffer, descriptor_set = 0, binding = 4)] meshes: &[Mesh],
     #[spirv(storage_buffer, descriptor_set = 0, binding = 5)] instances: &[Instance],
     #[spirv(storage_buffer, descriptor_set = 0, binding = 6)] emitters: &[Emitter],
-    #[spirv(uniform_constant, descriptor_set = 0, binding = 7)] accel: &AccelerationStructure,
-    #[spirv(uniform_constant, descriptor_set = 0, binding = 8)] color: &mut Image!(
+    #[spirv(storage_buffer, descriptor_set = 0, binding = 7)] bsdfs: &[DiffuseBsdf],
+    #[spirv(uniform_constant, descriptor_set = 0, binding = 8)] accel: &AccelerationStructure,
+    #[spirv(uniform_constant, descriptor_set = 0, binding = 9)] color: &mut Image!(
         2D,
         format = rgba32f,
         sampled = false
@@ -50,6 +53,7 @@ pub fn path_trace(
         meshes,
         instances,
         emitters,
+        bsdfs,
         accel,
     };
 

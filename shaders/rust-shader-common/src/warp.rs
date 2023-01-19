@@ -47,7 +47,19 @@ pub fn square_to_uniform_disk_concentric(sample: Vec2) -> Vec2 {
 }
 
 pub fn uniform_disk_to_square_concentric(p: Vec2) -> Vec2 {
-    todo!()
+    let quadrant_0_or_2 = p.x.abs() > p.y.abs();
+    let r_sign = if quadrant_0_or_2 { p.x } else { p.y };
+    let r = p.length().copysign(r_sign);
+
+    let phi = (p.y * r_sign.signum()).atan2(p.x * r_sign.signum());
+
+    let t = 4. / PI * phi;
+    let t = if quadrant_0_or_2 { t } else { 2. - t } * r;
+
+    let a = if quadrant_0_or_2 { r } else { t };
+    let b = if quadrant_0_or_2 { t } else { r };
+
+    vec2((a + 1.) * 0.5, (b + 1.) * 0.5)
 }
 
 // =======================================================================
@@ -72,17 +84,34 @@ pub fn square_to_uniform_sphere(sample: Vec2) -> Vec3 {
     vec3(r * v.cos(), r * v.sin(), z)
 }
 
-pub fn uniform_sphere_to_square(p: Vec3) -> Vec2 {
+pub fn sphere_to_square(p: Vec3) -> Vec2 {
     let phi = p.y.atan2(p.x) * 1. / (2. * PI);
     vec2(if phi < 0. { phi + 1. } else { phi }, (1. - p.z) * 0.5)
 }
 
-pub fn uniform_square_to_uniform_sphere_pdf(p: Vec3) -> f32 {
+pub fn square_to_uniform_sphere_pdf(p: Vec3) -> f32 {
     1. / (4. * PI)
 }
 
 // =======================================================================
 
-pub fn uniform_square_to_uniform_hemisphere(sample: Vec2) -> Vec3 {
+pub fn square_to_uniform_hemisphere(sample: Vec2) -> Vec3 {
     todo!()
+}
+
+// =======================================================================
+pub fn square_to_cosine_hemisphere(sample: Vec2) -> Vec3 {
+    let p = square_to_uniform_disk_concentric(sample);
+
+    let z = (1. - p.length_squared()).sqrt();
+
+    vec3(p.x, p.y, z)
+}
+
+pub fn cosine_hemisphere_to_square(v: Vec3) -> Vec2 {
+    uniform_disk_to_square_concentric(v.xy())
+}
+
+pub fn square_to_cosine_hemisphere_pdf(v: Vec3) -> f32 {
+    1. / PI * v.z
 }

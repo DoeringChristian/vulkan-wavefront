@@ -1,3 +1,4 @@
+use rust_shader_common::bsdf::{DiffuseBsdf, BSDF};
 use rust_shader_common::emitter::Emitter;
 use rust_shader_common::instance::Instance;
 use rust_shader_common::mesh::Mesh;
@@ -18,6 +19,7 @@ pub struct GPUScene<'a> {
     pub meshes: &'a [Mesh],
     pub instances: &'a [Instance],
     pub emitters: &'a [Emitter],
+    pub bsdfs: &'a [DiffuseBsdf],
     pub accel: &'a AccelerationStructure,
 }
 
@@ -112,7 +114,7 @@ impl<'a> Scene for GPUScene<'a> {
                     geometry_idx: primitive_idx,
                     wi: -ray.d,
                     valid: true,
-                    ..Default::default()
+                    uv: vec2(0., 0.),
                 }
             } else {
                 // ray hit sky
@@ -152,6 +154,15 @@ impl<'a> Scene for GPUScene<'a> {
             }
         } else {
             self.emitters[0]
+        }
+    }
+
+    fn bsdf(&self, si: &SurfaceInteraction3f) -> DiffuseBsdf {
+        if si.valid {
+            let instance = &self.instances[si.instance_id as usize];
+            self.bsdfs[instance.bsdf as usize].clone()
+        } else {
+            DiffuseBsdf::default()
         }
     }
 }

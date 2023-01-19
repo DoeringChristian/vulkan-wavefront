@@ -10,6 +10,16 @@ pub struct Texture {
     ty: TextureType,
 }
 
+impl Default for Texture {
+    fn default() -> Self {
+        Self {
+            const_val: [0., 0., 0.],
+            texture: 0,
+            ty: TextureType::Constant,
+        }
+    }
+}
+
 impl Texture {
     pub fn constant(val: Vec3) -> Self {
         Self {

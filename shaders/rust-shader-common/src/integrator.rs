@@ -1,14 +1,16 @@
 use crate::scene::Scene;
-use crate::{ray::Ray3f, sensor::Sensor};
+use crate::{bsdf::BSDF, ray::Ray3f, sensor::Sensor};
 use spirv_std::glam::*;
 
 use crate::sampler::IndependentSampler;
 
-pub struct SimplePathIntegrator {}
+pub struct SimplePathIntegrator {
+    pub max_depth: u32,
+}
 
 impl SimplePathIntegrator {
     pub fn new() -> Self {
-        Self {}
+        Self { max_depth: 4 }
     }
     pub fn render(
         &self,
@@ -40,15 +42,33 @@ impl SimplePathIntegrator {
         let mut L = vec3(0., 0., 0.);
         let mut f = vec3(1., 1., 1.);
         let mut active = true;
+        let mut depth = 0;
+        let mut ray = ray.clone();
 
-        while active {
+        while active && depth < self.max_depth {
             let si = scene.ray_intersect(&ray);
+            let bsdf = scene.bsdf(&si);
 
-            L = scene.emitter(&si).eval(&si, scene);
+            let (bsdf_sample, bsdf_weight) =
+                bsdf.sample(scene, &si, sampler.next_1d(), sampler.next_2d());
 
-            active = false;
+            let bsdf_weight = if bsdf_sample.pdf > 0. {
+                bsdf_weight / bsdf_sample.pdf
+            } else {
+                vec3(0., 0., 0.)
+            };
+
+            L += scene.emitter(&si).eval(&si, scene);
+            f *= bsdf_weight;
+
+            ray = si.spawn_ray(si.to_world(bsdf_sample.wo));
+
+            depth += 1;
+
+            // DEBUG
+            //active = false;
+            //L = bsdf_sample.wo;
         }
-        //L = ray.d;
         return L;
     }
 }

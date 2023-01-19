@@ -2,6 +2,7 @@ use crate::accel::{Blas, Tlas};
 use crate::array::Array;
 use russimp::scene::PostProcess;
 use russimp::Matrix4x4;
+use rust_shader_common::bsdf::DiffuseBsdf;
 use rust_shader_common::emitter::Emitter;
 use rust_shader_common::instance::Instance;
 use rust_shader_common::mesh::Mesh;
@@ -34,6 +35,7 @@ pub struct Scene {
     pub instances: Vec<Instance>,
     pub sensors: Vec<Sensor>,
     pub emitters: Vec<Emitter>,
+    pub bsdfs: Vec<DiffuseBsdf>,
     // pub materials: Vec<Material>,
     pub blases: Vec<Blas<[f32; 3]>>,
     pub tlas: Option<Tlas>,
@@ -41,6 +43,7 @@ pub struct Scene {
     pub instance_data: Option<Array<Instance>>,
     pub mesh_data: Option<Array<Mesh>>,
     pub emitter_data: Option<Array<Emitter>>,
+    pub bsdf_data: Option<Array<DiffuseBsdf>>,
     // pub material_data: Option<Array<Material>>,
 }
 
@@ -134,6 +137,23 @@ impl Scene {
                 tangents: tangents_offset as _,
             })
         }
+
+        let mut bsdfs = vec![DiffuseBsdf {
+            diffuse: Texture::constant(glam::vec3(0., 0., 0.)),
+        }];
+        for material in scene.materials.iter() {
+            let diffuse = material
+                .properties
+                .iter()
+                .find(|prop| prop.key == "$clr.diffuse")
+                .unwrap();
+            if let russimp::material::PropertyTypeInfo::FloatArray(diffuse) = &diffuse.data {
+                bsdfs.push(DiffuseBsdf {
+                    diffuse: Texture::constant(glam::vec3(diffuse[0], diffuse[1], diffuse[2])),
+                })
+            }
+        }
+
         let mut instances = vec![];
         let mut emitters = vec![Emitter::env(Texture::constant(glam::vec3(0.1, 0.1, 0.1)))];
         let mut nodes = HashMap::new();
@@ -177,7 +197,8 @@ impl Scene {
                     instances.push(Instance {
                         transform,
                         mesh_idx: *mesh_idx as u32,
-                        emitter: emitter.unwrap_or(0),
+                        emitter: emitter.map(|emitter| emitter + 1).unwrap_or(0),
+                        bsdf: mesh.material_index + 1,
                     });
                 }
             },
@@ -205,6 +226,7 @@ impl Scene {
             meshes,
             instances,
             emitters,
+            bsdfs,
             sensors,
 
             positions: Array::from_slice(
@@ -229,6 +251,7 @@ impl Scene {
             mesh_data: None,
             instance_data: None,
             emitter_data: None,
+            bsdf_data: None,
 
             device: device.clone(),
         }
@@ -297,6 +320,11 @@ impl Scene {
             &self.device,
             vk::BufferUsageFlags::STORAGE_BUFFER,
             &self.emitters,
+        ));
+        self.bsdf_data = Some(Array::from_slice(
+            &self.device,
+            vk::BufferUsageFlags::STORAGE_BUFFER,
+            &self.bsdfs,
         ));
 
         // Build blas and tlas
