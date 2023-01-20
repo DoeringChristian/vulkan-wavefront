@@ -48,6 +48,7 @@ fn main() {
         sc13.device.device_wait_idle().unwrap();
     }
 
+    let mut seed = 0;
     sc13.run(|frame| {
         frame.render_graph.clear_color_image(frame.swapchain_image);
         let img = cache
@@ -69,12 +70,13 @@ fn main() {
                 0.01,
                 100.,
             )),
-            0,
+            seed,
             AnyImageNode::ImageLease(img_node),
             &mut cache,
             frame.render_graph,
         );
         presenter.present_image(frame.render_graph, img_node, frame.swapchain_image);
+        seed += 1;
     })
     .unwrap();
 

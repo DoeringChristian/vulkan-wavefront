@@ -5,7 +5,7 @@ use crate::util;
 pub fn sample_tea_32(v0: u32, v1: u32, rounds: usize) -> (u32, u32) {
     let rounds = if rounds <= 0 { 4 } else { rounds };
     let mut v0 = v0;
-    let mut v1 = v0;
+    let mut v1 = v1;
     let mut sum = 0;
     for _ in 0..rounds {
         sum += 0x9e3779b9;

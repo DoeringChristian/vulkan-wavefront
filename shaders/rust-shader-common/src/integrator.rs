@@ -66,7 +66,8 @@ impl SimplePathIntegrator {
             depth += 1;
 
             // DEBUG
-            //active = false;
+            active = false;
+            L = vec3(sampler.next_1d(), 0., 0.);
             //L = bsdf_sample.wo;
         }
         return L;
