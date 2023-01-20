@@ -13,4 +13,5 @@ pub mod sampler;
 pub mod scene;
 pub mod sensor;
 pub mod texture;
+pub mod util;
 pub mod warp;

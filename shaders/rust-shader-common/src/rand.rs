@@ -1,5 +1,7 @@
 use core::num::Wrapping;
 
+use crate::util;
+
 pub fn sample_tea_32(v0: u32, v1: u32, rounds: usize) -> (u32, u32) {
     let rounds = if rounds <= 0 { 4 } else { rounds };
     let mut v0 = v0;
@@ -65,7 +67,7 @@ impl PCG {
         // let sample = self.next_u32();
         // let sample = sample.wrapping_shr(9) | 0x3f800000u32;
         // unsafe { *(&sample as *const u32 as *const f32) }
-        (self.next_u32() & 0xffffff) as f32 / 16777216.0
+        unsafe { util::bitcast_u32_to_f32(self.next_u32().wrapping_shr(9) | 0x3f800000u32) - 1. }
     }
 }
 

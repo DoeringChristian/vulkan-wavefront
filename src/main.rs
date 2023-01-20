@@ -53,15 +53,15 @@ fn main() {
         let img = cache
             .lease(ImageInfo::new_2d(
                 vk::Format::R32G32B32A32_SFLOAT,
-                100,
-                100,
+                1000,
+                1000,
                 vk::ImageUsageFlags::STORAGE | vk::ImageUsageFlags::SAMPLED,
             ))
             .unwrap();
         let img_node = frame.render_graph.bind_node(img);
         pt_renderer.record(
             &scene,
-            glam::uvec3(100, 100, 8),
+            glam::uvec3(1000, 1000, 8),
             Some(Sensor::perspective(
                 glam::Mat4::from_translation(glam::vec3(0., 0., -300.)),
                 PI / 2.,
