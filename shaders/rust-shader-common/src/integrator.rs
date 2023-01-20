@@ -10,7 +10,7 @@ pub struct SimplePathIntegrator {
 
 impl SimplePathIntegrator {
     pub fn new() -> Self {
-        Self { max_depth: 4 }
+        Self { max_depth: 2 }
     }
     pub fn render(
         &self,
@@ -66,8 +66,8 @@ impl SimplePathIntegrator {
             depth += 1;
 
             // DEBUG
-            active = false;
-            L = vec3(sampler.next_1d(), 0., 0.);
+            //active = false;
+            //L = vec3(sampler.next_1d(), 0., 0.);
             //L = bsdf_sample.wo;
         }
         return L;
